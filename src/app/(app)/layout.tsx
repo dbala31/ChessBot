@@ -3,21 +3,11 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { LimelightNav } from '@/components/ui/limelight-nav'
 import type { NavItem } from '@/components/ui/limelight-nav'
-import {
-  LayoutDashboard,
-  Target,
-  Gamepad2,
-  Settings,
-  Crown,
-} from 'lucide-react'
+import { LayoutDashboard, Target, Gamepad2, BarChart3, Settings, Crown } from 'lucide-react'
 
-const NAV_ROUTES = ['/dashboard', '/train', '/games', '/settings'] as const
+const NAV_ROUTES = ['/dashboard', '/report', '/train', '/games', '/settings'] as const
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -31,6 +21,12 @@ export default function AppLayout({
       icon: <LayoutDashboard />,
       label: 'Dashboard',
       onClick: () => router.push('/dashboard'),
+    },
+    {
+      id: 'report',
+      icon: <BarChart3 />,
+      label: 'Report',
+      onClick: () => router.push('/report'),
     },
     {
       id: 'train',
@@ -70,10 +66,7 @@ export default function AppLayout({
           >
             <Crown size={16} />
           </div>
-          <span
-            className="text-sm font-semibold"
-            style={{ color: 'var(--text-primary)' }}
-          >
+          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
             ChessBot
           </span>
         </div>
@@ -92,10 +85,7 @@ export default function AppLayout({
       </header>
 
       {/* Page content */}
-      <main
-        className="flex-1 overflow-y-auto"
-        style={{ background: 'var(--bg-secondary)' }}
-      >
+      <main className="flex-1 overflow-y-auto" style={{ background: 'var(--bg-secondary)' }}>
         {children}
       </main>
     </div>
