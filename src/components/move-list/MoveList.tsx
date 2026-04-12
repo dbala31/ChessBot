@@ -17,15 +17,15 @@ interface MoveListProps {
 }
 
 const CLASSIFICATION_COLORS: Record<MoveClassification, string> = {
-  [MoveClassification.Best]: 'text-green-400',
-  [MoveClassification.Good]: 'text-gray-300',
-  [MoveClassification.Inaccuracy]: 'text-yellow-400',
-  [MoveClassification.Mistake]: 'text-orange-400',
-  [MoveClassification.Blunder]: 'text-red-400',
+  [MoveClassification.Best]: 'var(--success)',
+  [MoveClassification.Good]: 'var(--text-primary)',
+  [MoveClassification.Inaccuracy]: 'var(--warning)',
+  [MoveClassification.Mistake]: '#f97316',
+  [MoveClassification.Blunder]: 'var(--danger)',
 }
 
 const CLASSIFICATION_ICONS: Record<MoveClassification, string> = {
-  [MoveClassification.Best]: '✓',
+  [MoveClassification.Best]: '',
   [MoveClassification.Good]: '',
   [MoveClassification.Inaccuracy]: '?!',
   [MoveClassification.Mistake]: '?',
@@ -39,7 +39,6 @@ export function MoveList({ moves, currentPly, onClickPly }: MoveListProps) {
     activeRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [currentPly])
 
-  // Group moves into pairs (white, black)
   const pairs: Array<{
     moveNumber: number
     white: MoveEntry | null
@@ -55,11 +54,11 @@ export function MoveList({ moves, currentPly, onClickPly }: MoveListProps) {
   }
 
   function renderMove(move: MoveEntry | null) {
-    if (!move) return <span className="w-24" />
+    if (!move) return <span className="w-20" />
 
-    const colorClass = move.classification
+    const color = move.classification
       ? CLASSIFICATION_COLORS[move.classification]
-      : 'text-gray-300'
+      : 'var(--text-primary)'
     const icon = move.classification
       ? CLASSIFICATION_ICONS[move.classification]
       : ''
@@ -69,34 +68,36 @@ export function MoveList({ moves, currentPly, onClickPly }: MoveListProps) {
       <button
         ref={isActive ? activeRef : undefined}
         onClick={() => onClickPly(move.ply)}
-        className={`inline-flex w-24 items-center gap-1 rounded px-1.5 py-0.5 text-left font-mono text-sm transition-colors ${colorClass} ${
-          isActive ? 'bg-green-600/20 font-bold' : 'hover:bg-gray-800'
-        }`}
+        className="inline-flex w-20 cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-left font-mono text-xs transition-colors duration-100"
+        style={{
+          color,
+          background: isActive ? 'var(--accent-light)' : 'transparent',
+          fontWeight: isActive ? 600 : 400,
+        }}
       >
         <span>{move.san}</span>
-        {icon && (
-          <span className="text-[10px] opacity-75">{icon}</span>
-        )}
+        {icon && <span className="text-[9px] opacity-60">{icon}</span>}
       </button>
     )
   }
 
   return (
-    <div className="max-h-96 overflow-y-auto rounded-lg border border-gray-800 bg-gray-900">
-      <div className="divide-y divide-gray-800/50">
-        {pairs.map((pair) => (
-          <div
-            key={pair.moveNumber}
-            className="flex items-center gap-1 px-2 py-0.5"
-          >
-            <span className="w-8 flex-shrink-0 text-right font-mono text-xs text-gray-500">
-              {pair.moveNumber}.
-            </span>
-            {renderMove(pair.white)}
-            {renderMove(pair.black)}
-          </div>
-        ))}
-      </div>
+    <div
+      className="card max-h-96 overflow-y-auto"
+    >
+      {pairs.map((pair) => (
+        <div
+          key={pair.moveNumber}
+          className="flex items-center gap-0.5 px-2 py-px"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
+          <span className="w-7 flex-shrink-0 text-right font-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>
+            {pair.moveNumber}.
+          </span>
+          {renderMove(pair.white)}
+          {renderMove(pair.black)}
+        </div>
+      ))}
     </div>
   )
 }

@@ -1,58 +1,47 @@
 'use client'
 
 interface EvalBarProps {
-  /** Evaluation in centipawns (positive = white advantage) */
   readonly eval: number
-  /** Whether it's a mate score */
   readonly isMate?: boolean
-  /** Moves until mate (if isMate is true) */
   readonly mateIn?: number | null
 }
 
 function evalToPercentage(cp: number): number {
-  // Sigmoid-like mapping: ±500cp → ~5% / ~95%
   const clamped = Math.max(-500, Math.min(500, cp))
   return 50 + (clamped / 500) * 45
 }
 
 function formatEval(cp: number, isMate: boolean, mateIn: number | null): string {
-  if (isMate && mateIn !== null) {
-    return `M${Math.abs(mateIn)}`
-  }
+  if (isMate && mateIn !== null) return `M${Math.abs(mateIn)}`
   const pawns = Math.abs(cp / 100)
   const sign = cp >= 0 ? '+' : '-'
   return `${sign}${pawns.toFixed(1)}`
 }
 
-export function EvalBar({
-  eval: evaluation,
-  isMate = false,
-  mateIn = null,
-}: EvalBarProps) {
+export function EvalBar({ eval: evaluation, isMate = false, mateIn = null }: EvalBarProps) {
   const whitePercent = isMate
-    ? mateIn !== null && mateIn > 0
-      ? 95
-      : 5
+    ? mateIn !== null && mateIn > 0 ? 95 : 5
     : evalToPercentage(evaluation)
 
   return (
-    <div className="flex h-full w-8 flex-col overflow-hidden rounded-md border border-gray-700">
-      {/* Black side (top) */}
+    <div
+      className="flex h-full w-7 flex-col overflow-hidden rounded-lg"
+      style={{ border: '1px solid var(--border)' }}
+    >
       <div
-        className="bg-gray-800 transition-all duration-500 ease-out"
-        style={{ height: `${100 - whitePercent}%` }}
+        className="transition-all duration-500 ease-out"
+        style={{ height: `${100 - whitePercent}%`, background: 'var(--bg-tertiary)' }}
       />
-      {/* White side (bottom) */}
       <div
-        className="relative bg-gray-100 transition-all duration-500 ease-out"
-        style={{ height: `${whitePercent}%` }}
+        className="relative transition-all duration-500 ease-out"
+        style={{ height: `${whitePercent}%`, background: 'var(--text-primary)' }}
       >
         <span
-          className={`absolute inset-x-0 text-center text-[10px] font-bold leading-tight ${
-            whitePercent > 50
-              ? 'top-1 text-gray-800'
-              : 'bottom-1 text-gray-800'
-          }`}
+          className="absolute inset-x-0 text-center text-[9px] font-bold leading-tight"
+          style={{
+            color: 'var(--bg-primary)',
+            ...(whitePercent > 50 ? { top: '3px' } : { bottom: '3px' }),
+          }}
         >
           {formatEval(evaluation, isMate, mateIn)}
         </span>

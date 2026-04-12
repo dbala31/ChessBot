@@ -29,12 +29,6 @@ const SCORE_LABELS: Record<ScoreType, string> = {
   [ScoreType.OpeningPerformance]: 'Openings',
 }
 
-function getScoreColor(value: number): string {
-  if (value < 40) return '#ef4444' // red
-  if (value < 70) return '#eab308' // yellow
-  return '#22c55e' // green
-}
-
 export function SkillRadar({ scores }: SkillRadarProps) {
   const data = Object.values(ScoreType).map((type) => {
     const score = scores.find((s) => s.scoreType === type)
@@ -45,34 +39,38 @@ export function SkillRadar({ scores }: SkillRadarProps) {
     }
   })
 
-  const avgScore =
-    scores.length > 0 ? Math.round(scores.reduce((sum, s) => sum + s.value, 0) / scores.length) : 0
-
-  const fillColor = getScoreColor(avgScore)
-
   return (
-    <div className="h-80 w-full">
+    <div className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-          <PolarGrid stroke="#374151" />
-          <PolarAngleAxis dataKey="skill" tick={{ fill: '#9ca3af', fontSize: 12 }} />
-          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#6b7280', fontSize: 10 }} />
+        <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
+          <PolarGrid stroke="#e2e8f0" />
+          <PolarAngleAxis
+            dataKey="skill"
+            tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
+          />
+          <PolarRadiusAxis
+            angle={30}
+            domain={[0, 100]}
+            tick={{ fill: '#94a3b8', fontSize: 9 }}
+          />
           <Radar
             name="Skill"
             dataKey="value"
-            stroke={fillColor}
-            fill={fillColor}
-            fillOpacity={0.3}
+            stroke="#7c3aed"
+            fill="#7c3aed"
+            fillOpacity={0.12}
             strokeWidth={2}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#1f2937',
-              border: '1px solid #374151',
+              backgroundColor: '#fff',
+              border: '1px solid #e2e8f0',
               borderRadius: '8px',
+              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07)',
+              fontSize: '12px',
             }}
-            labelStyle={{ color: '#f9fafb' }}
-            itemStyle={{ color: '#d1d5db' }}
+            labelStyle={{ color: '#0f172a', fontWeight: 600 }}
+            itemStyle={{ color: '#7c3aed' }}
             formatter={(value: unknown) => [`${value}/100`, 'Score']}
           />
         </RadarChart>

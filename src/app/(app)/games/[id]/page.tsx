@@ -8,6 +8,7 @@ import { MoveList } from '@/components/move-list/MoveList'
 import { MoveClassification } from '@/types'
 import { Chess } from 'chess.js'
 import type { Key } from 'chessground/types'
+import { SkipBack, ChevronLeft, ChevronRight, SkipForward, Sparkles, Target } from 'lucide-react'
 
 // Mock data for design — Italian Game (shortened)
 const MOCK_PGN =
@@ -138,10 +139,16 @@ export default function GameReviewPage() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [allMoves.length])
 
+  const navButtons = [
+    { key: 'start', icon: SkipBack, action: () => goTo(0) },
+    { key: 'prev', icon: ChevronLeft, action: () => goTo(currentPly - 1) },
+    { key: 'next', icon: ChevronRight, action: () => goTo(currentPly + 1) },
+    { key: 'end', icon: SkipForward, action: () => goTo(allMoves.length) },
+  ]
+
   return (
     <div className="flex h-full flex-col p-4 lg:p-6">
       <div className="flex flex-1 gap-4 overflow-hidden">
-        {/* Left: Board + Eval Bar */}
         <div className="flex gap-2">
           <EvalBar eval={currentEval} />
           <div className="w-[400px] flex-shrink-0 lg:w-[480px]">
@@ -153,68 +160,60 @@ export default function GameReviewPage() {
           </div>
         </div>
 
-        {/* Right: Move list + controls */}
-        <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-          {/* Game info */}
-          <div className="flex items-center gap-4 text-sm text-gray-400">
-            <span className="font-medium text-gray-200">You vs MagnusFan99</span>
-            <span className="font-semibold text-red-400">0-1</span>
-            <span>♞ Lichess</span>
-            <span>5+0 Blitz</span>
+        <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+          <div className="card flex items-center gap-3 px-4 py-2.5 text-xs">
+            <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+              You vs MagnusFan99
+            </span>
+            <span className="font-mono font-bold" style={{ color: 'var(--danger)' }}>
+              0-1
+            </span>
+            <span style={{ color: 'var(--text-muted)' }}>Lichess</span>
+            <span style={{ color: 'var(--text-muted)' }}>5+0 Blitz</span>
           </div>
 
-          {/* Navigation buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => goTo(0)}
-              className="rounded bg-gray-800 px-3 py-1.5 text-sm hover:bg-gray-700"
-            >
-              ⏮
-            </button>
-            <button
-              onClick={() => goTo(currentPly - 1)}
-              className="rounded bg-gray-800 px-3 py-1.5 text-sm hover:bg-gray-700"
-            >
-              ◀
-            </button>
-            <button
-              onClick={() => goTo(currentPly + 1)}
-              className="rounded bg-gray-800 px-3 py-1.5 text-sm hover:bg-gray-700"
-            >
-              ▶
-            </button>
-            <button
-              onClick={() => goTo(allMoves.length)}
-              className="rounded bg-gray-800 px-3 py-1.5 text-sm hover:bg-gray-700"
-            >
-              ⏭
-            </button>
+          <div className="flex gap-1">
+            {navButtons.map((btn) => (
+              <button
+                key={btn.key}
+                onClick={btn.action}
+                className="card cursor-pointer rounded-md p-2 transition-colors duration-150"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                <btn.icon size={16} />
+              </button>
+            ))}
           </div>
 
-          {/* Move list */}
           <div className="flex-1 overflow-hidden">
             <MoveList moves={MOCK_MOVES} currentPly={currentPly} onClickPly={goTo} />
           </div>
 
-          {/* Explain button for mistakes */}
           {currentPly > 0 &&
             MOCK_MOVES[currentPly - 1]?.classification &&
             (MOCK_MOVES[currentPly - 1].classification === MoveClassification.Mistake ||
               MOCK_MOVES[currentPly - 1].classification === MoveClassification.Blunder) && (
               <div className="flex gap-2">
-                <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-                  🤖 Explain with AI
+                <button
+                  className="flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium text-white transition-colors duration-150"
+                  style={{ background: 'var(--accent)' }}
+                >
+                  <Sparkles size={13} />
+                  Explain with AI
                 </button>
-                <button className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700">
-                  Practice this position
+                <button
+                  className="card flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors duration-150"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  <Target size={13} />
+                  Practice this
                 </button>
               </div>
             )}
         </div>
       </div>
 
-      {/* Bottom: Eval graph */}
-      <div className="mt-4 rounded-xl border border-gray-800 bg-gray-900 p-4">
+      <div className="card mt-4 p-4">
         <EvalGraph data={MOCK_EVAL_DATA} currentPly={currentPly} onClickPly={goTo} />
       </div>
     </div>
