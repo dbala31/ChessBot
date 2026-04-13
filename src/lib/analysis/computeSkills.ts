@@ -37,6 +37,15 @@ function mapRow(row: AnalyzedMoveRow) {
 export async function computeAllSkills(userId: string): Promise<readonly SkillResult[]> {
   const supabase = createServiceClient()
 
+  // Fetch user's rating for relative scoring
+  const { data: settings } = await supabase
+    .from('user_settings')
+    .select('current_rating')
+    .eq('user_id', userId)
+    .single()
+
+  const rating = settings?.current_rating ?? 1200
+
   // Fetch analyzed moves from the user's last 200 games
   const { data: games } = await supabase
     .from('games')
@@ -64,15 +73,15 @@ export async function computeAllSkills(userId: string): Promise<readonly SkillRe
   const mapped = (moves as AnalyzedMoveRow[]).map(mapRow)
 
   const scores: SkillResult[] = [
-    { scoreType: ScoreType.Tactics, value: computeTactics(mapped) },
-    { scoreType: ScoreType.Endgame, value: computeEndgame(mapped) },
+    { scoreType: ScoreType.Tactics, value: computeTactics(mapped, rating) },
+    { scoreType: ScoreType.Endgame, value: computeEndgame(mapped, rating) },
     {
       scoreType: ScoreType.AdvantageCapitalization,
-      value: computeAdvantageCapitalization(mapped),
+      value: computeAdvantageCapitalization(mapped, rating),
     },
     {
       scoreType: ScoreType.Resourcefulness,
-      value: computeResourcefulness(mapped),
+      value: computeResourcefulness(mapped, rating),
     },
     {
       scoreType: ScoreType.TimeManagement,
@@ -80,7 +89,7 @@ export async function computeAllSkills(userId: string): Promise<readonly SkillRe
     },
     {
       scoreType: ScoreType.OpeningPerformance,
-      value: computeOpeningPerformance(mapped),
+      value: computeOpeningPerformance(mapped, rating),
     },
   ]
 

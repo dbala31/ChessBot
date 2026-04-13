@@ -26,12 +26,15 @@ interface ImportStatus {
 export default function SettingsPage() {
   const [chesscomUsername, setChesscomUsername] = useState('')
   const [lichessUsername, setLichessUsername] = useState('')
+  const [currentRating, setCurrentRating] = useState('')
+  const [targetRating, setTargetRating] = useState('')
+  const [ratingSaved, setRatingSaved] = useState(false)
   const [importStatus, setImportStatus] = useState<Record<GameSource, ImportStatus>>({
     chesscom: { loading: false, result: null, error: null },
     lichess: { loading: false, result: null, error: null },
   })
 
-  // Load saved usernames
+  // Load saved settings
   useEffect(() => {
     async function load() {
       try {
@@ -40,6 +43,8 @@ export default function SettingsPage() {
         if (data.success && data.data) {
           if (data.data.chesscom_username) setChesscomUsername(data.data.chesscom_username)
           if (data.data.lichess_username) setLichessUsername(data.data.lichess_username)
+          if (data.data.current_rating) setCurrentRating(String(data.data.current_rating))
+          if (data.data.target_rating) setTargetRating(String(data.data.target_rating))
         }
       } catch {
         // ignore
@@ -48,16 +53,22 @@ export default function SettingsPage() {
     load()
   }, [])
 
-  const saveUsernames = useCallback(async (chesscom: string, lichess: string) => {
-    await fetch('/api/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chesscomUsername: chesscom || null,
-        lichessUsername: lichess || null,
-      }),
-    })
-  }, [])
+  const saveSettings = useCallback(
+    async (overrides?: { rating?: number; target?: number }) => {
+      const body: Record<string, unknown> = {
+        chesscomUsername: chesscomUsername || null,
+        lichessUsername: lichessUsername || null,
+      }
+      if (overrides?.rating !== undefined) body.currentRating = overrides.rating
+      if (overrides?.target !== undefined) body.targetRating = overrides.target
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+    },
+    [chesscomUsername, lichessUsername],
+  )
 
   async function handleImport(source: GameSource) {
     const username = source === 'chesscom' ? chesscomUsername : lichessUsername
@@ -65,7 +76,7 @@ export default function SettingsPage() {
 
     setImportStatus((prev) => ({ ...prev, [source]: { loading: true, result: null, error: null } }))
 
-    await saveUsernames(chesscomUsername, lichessUsername)
+    await saveSettings()
 
     try {
       const res = await fetch('/api/games/import', {
@@ -155,6 +166,89 @@ export default function SettingsPage() {
             </div>
           )
         })}
+
+        {/* Rating */}
+        <div className="card p-5">
+          <h2 className="mb-1 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Rating
+          </h2>
+          <p className="mb-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+            Your scores are measured relative to your rating level. A 1300 player is judged against
+            1300 benchmarks.
+          </p>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label
+                className="mb-1 block text-[11px] font-medium"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                Current Rating
+              </label>
+              <input
+                type="number"
+                value={currentRating}
+                onChange={(e) => {
+                  setCurrentRating(e.target.value)
+                  setRatingSaved(false)
+                }}
+                placeholder="e.g. 1300"
+                min={100}
+                max={3500}
+                className="w-full rounded-md px-3 py-2 text-xs transition-all duration-150 outline-none focus:ring-2"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
+                }}
+              />
+            </div>
+            <div className="flex-1">
+              <label
+                className="mb-1 block text-[11px] font-medium"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                Target Rating
+              </label>
+              <input
+                type="number"
+                value={targetRating}
+                onChange={(e) => {
+                  setTargetRating(e.target.value)
+                  setRatingSaved(false)
+                }}
+                placeholder="e.g. 1700"
+                min={100}
+                max={3500}
+                className="w-full rounded-md px-3 py-2 text-xs transition-all duration-150 outline-none focus:ring-2"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
+                }}
+              />
+            </div>
+          </div>
+          <button
+            onClick={async () => {
+              await saveSettings({
+                rating: currentRating ? Number(currentRating) : undefined,
+                target: targetRating ? Number(targetRating) : undefined,
+              })
+              setRatingSaved(true)
+              // Recompute skills with new rating
+              await fetch('/api/skills/compute', { method: 'POST' })
+            }}
+            className="mt-3 flex cursor-pointer items-center gap-1.5 rounded-md px-4 py-2 text-xs font-medium text-white transition-colors duration-150"
+            style={{ background: 'var(--accent)' }}
+          >
+            Save & Recompute Scores
+          </button>
+          {ratingSaved && (
+            <p className="mt-2 text-xs" style={{ color: 'var(--success)' }}>
+              Saved! Scores recalculated for your level.
+            </p>
+          )}
+        </div>
 
         <AnalysisSection />
 
