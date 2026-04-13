@@ -3,11 +3,18 @@
 import { useState, useEffect, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import type { GameSource } from '@/types'
-import { Upload, Loader2 } from 'lucide-react'
+import { Upload, Loader2, Trash2 } from 'lucide-react'
 
 const AnalysisSection = dynamic(
   () => import('@/components/analysis/AnalysisSection').then((m) => m.AnalysisSection),
-  { ssr: false, loading: () => <div className="card p-5 text-xs" style={{ color: 'var(--text-muted)' }}>Loading analysis engine...</div> },
+  {
+    ssr: false,
+    loading: () => (
+      <div className="card p-5 text-xs" style={{ color: 'var(--text-muted)' }}>
+        Loading analysis engine...
+      </div>
+    ),
+  },
 )
 
 interface ImportStatus {
@@ -69,19 +76,32 @@ export default function SettingsPage() {
       const data = await res.json()
 
       if (!data.success) {
-        setImportStatus((prev) => ({ ...prev, [source]: { loading: false, result: null, error: data.error } }))
+        setImportStatus((prev) => ({
+          ...prev,
+          [source]: { loading: false, result: null, error: data.error },
+        }))
         return
       }
-      setImportStatus((prev) => ({ ...prev, [source]: { loading: false, result: data.data, error: null } }))
+      setImportStatus((prev) => ({
+        ...prev,
+        [source]: { loading: false, result: data.data, error: null },
+      }))
     } catch {
-      setImportStatus((prev) => ({ ...prev, [source]: { loading: false, result: null, error: 'Network error.' } }))
+      setImportStatus((prev) => ({
+        ...prev,
+        [source]: { loading: false, result: null, error: 'Network error.' },
+      }))
     }
   }
 
   return (
     <div className="mx-auto max-w-xl p-6">
-      <h1 className="mb-1 text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Settings</h1>
-      <p className="mb-6 text-xs" style={{ color: 'var(--text-muted)' }}>Connect accounts and import games</p>
+      <h1 className="mb-1 text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
+        Settings
+      </h1>
+      <p className="mb-6 text-xs" style={{ color: 'var(--text-muted)' }}>
+        Connect accounts and import games
+      </p>
 
       <div className="space-y-4">
         {(['chesscom', 'lichess'] as const).map((source) => {
@@ -92,15 +112,21 @@ export default function SettingsPage() {
 
           return (
             <div key={source} className="card p-5">
-              <h2 className="mb-3 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{label}</h2>
+              <h2 className="mb-3 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {label}
+              </h2>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder={`${label} username`}
-                  className="flex-1 rounded-md px-3 py-2 text-xs outline-none transition-all duration-150 focus:ring-2"
-                  style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                  className="flex-1 rounded-md px-3 py-2 text-xs transition-all duration-150 outline-none focus:ring-2"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
                 />
                 <button
                   onClick={() => handleImport(source)}
@@ -122,13 +148,47 @@ export default function SettingsPage() {
                 </p>
               )}
               {status.error && (
-                <p className="mt-2 text-xs" style={{ color: 'var(--danger)' }}>{status.error}</p>
+                <p className="mt-2 text-xs" style={{ color: 'var(--danger)' }}>
+                  {status.error}
+                </p>
               )}
             </div>
           )
         })}
 
         <AnalysisSection />
+
+        {/* Danger zone */}
+        <div className="card p-5" style={{ borderColor: 'var(--danger)' }}>
+          <h2 className="mb-2 text-sm font-semibold" style={{ color: 'var(--danger)' }}>
+            Danger Zone
+          </h2>
+          <p className="mb-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+            Delete all your data — games, analysis, drills, scores. This cannot be undone.
+          </p>
+          <button
+            onClick={async () => {
+              if (!confirm('Are you sure? This will delete ALL your data permanently.')) return
+              try {
+                const res = await fetch('/api/reset', { method: 'POST' })
+                const data = await res.json()
+                if (data.success) {
+                  alert('All data deleted. Reloading...')
+                  window.location.reload()
+                } else {
+                  alert('Error: ' + (data.error ?? 'Unknown'))
+                }
+              } catch {
+                alert('Network error')
+              }
+            }}
+            className="flex cursor-pointer items-center gap-1.5 rounded-md px-4 py-2 text-xs font-medium text-white transition-colors duration-150"
+            style={{ background: 'var(--danger)' }}
+          >
+            <Trash2 size={13} />
+            Delete All Data
+          </button>
+        </div>
       </div>
     </div>
   )
