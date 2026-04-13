@@ -25,27 +25,34 @@ function avgCpLoss(moves: readonly ScoringMove[]): number {
   return total / moves.length
 }
 
-/** Convert average cp_loss to a 0–100 score. Lower loss = higher score. */
-function cpLossToScore(avg: number, maxLoss: number = 100): number {
-  return clamp(Math.round(100 * (1 - avg / maxLoss)), 0, 100)
+/** Convert average cp_loss to a 0–100 score. Lower loss = higher score.
+ *  Uses a curve that's more forgiving — an avg of ~30cp maps to ~75, ~80cp to ~50, ~200cp to ~15.
+ */
+function cpLossToScore(avg: number): number {
+  if (avg <= 0) return 100
+  // Exponential decay: score = 100 * e^(-avg/120)
+  // This gives: 30cp → 78, 50cp → 66, 80cp → 51, 120cp → 37, 200cp → 19
+  return clamp(Math.round(100 * Math.exp(-avg / 120)), 0, 100)
 }
 
 // ── Scoring Functions ─────────────────────────────────────────────────────────
 
 /**
- * Tactics: based on blunder/mistake rate. Fewer tactical errors = higher score.
+ * Tactics: weighted error score. Blunders penalized more than mistakes.
+ * A typical club player has ~15-25% error rate; this should map to ~40-60.
  */
 export function computeTactics(moves: readonly ScoringMove[]): number {
   if (moves.length === 0) return DEFAULT_SCORE
 
-  const errors = moves.filter(
-    (m) =>
-      m.classification === MoveClassification.Mistake ||
-      m.classification === MoveClassification.Blunder,
-  )
+  const mistakes = moves.filter((m) => m.classification === MoveClassification.Mistake).length
+  const blunders = moves.filter((m) => m.classification === MoveClassification.Blunder).length
 
-  const errorRate = errors.length / moves.length
-  return clamp(Math.round(100 * (1 - errorRate * 4)), 0, 100)
+  // Weighted error rate: blunders count 2x
+  const weightedErrors = mistakes + blunders * 2
+  const weightedRate = weightedErrors / moves.length
+
+  // Use exponential decay: 0% errors → 100, 15% → 65, 30% → 42, 50% → 22
+  return clamp(Math.round(100 * Math.exp(-weightedRate * 3)), 0, 100)
 }
 
 /**
@@ -55,40 +62,36 @@ export function computeEndgame(moves: readonly ScoringMove[]): number {
   const endgameMoves = moves.filter((m) => m.phase === GamePhase.Endgame)
   if (endgameMoves.length === 0) return DEFAULT_SCORE
 
-  return cpLossToScore(avgCpLoss(endgameMoves), 80)
+  return cpLossToScore(avgCpLoss(endgameMoves))
 }
 
 /**
  * Advantage capitalization: how well you maintain/convert when eval > +150cp.
  */
-export function computeAdvantageCapitalization(
-  moves: readonly ScoringMove[],
-): number {
+export function computeAdvantageCapitalization(moves: readonly ScoringMove[]): number {
   const advantageMoves = moves.filter((m) => m.evalBefore >= 150)
   if (advantageMoves.length === 0) return DEFAULT_SCORE
 
-  return cpLossToScore(avgCpLoss(advantageMoves), 80)
+  return cpLossToScore(avgCpLoss(advantageMoves))
 }
 
 /**
  * Resourcefulness: how well you play when eval < -150cp (defending).
  */
-export function computeResourcefulness(
-  moves: readonly ScoringMove[],
-): number {
+export function computeResourcefulness(moves: readonly ScoringMove[]): number {
   const defenseMoves = moves.filter((m) => m.evalBefore <= -150)
   if (defenseMoves.length === 0) return DEFAULT_SCORE
 
-  return cpLossToScore(avgCpLoss(defenseMoves), 80)
+  // Defensive positions naturally have higher cp_loss, so use a gentler curve
+  const avg = avgCpLoss(defenseMoves)
+  return clamp(Math.round(100 * Math.exp(-avg / 200)), 0, 100)
 }
 
 /**
  * Time management: consistency of time usage + avoiding fast blunders.
  * Penalizes moves made in < 1s that result in mistakes/blunders.
  */
-export function computeTimeManagement(
-  moves: readonly ScoringMove[],
-): number {
+export function computeTimeManagement(moves: readonly ScoringMove[]): number {
   const timedMoves = moves.filter((m) => m.timeSpent !== null)
   if (timedMoves.length === 0) return DEFAULT_SCORE
 
@@ -105,8 +108,7 @@ export function computeTimeManagement(
   // Consistency: coefficient of variation of time spent
   const times = timedMoves.map((m) => m.timeSpent!)
   const mean = times.reduce((a, b) => a + b, 0) / times.length
-  const variance =
-    times.reduce((sum, t) => sum + (t - mean) ** 2, 0) / times.length
+  const variance = times.reduce((sum, t) => sum + (t - mean) ** 2, 0) / times.length
   const cv = mean > 0 ? Math.sqrt(variance) / mean : 0
 
   // High CV = erratic, penalize. Fast blunders also penalize.
@@ -119,11 +121,9 @@ export function computeTimeManagement(
 /**
  * Opening performance: average cp_loss in the first 15 moves (opening phase).
  */
-export function computeOpeningPerformance(
-  moves: readonly ScoringMove[],
-): number {
+export function computeOpeningPerformance(moves: readonly ScoringMove[]): number {
   const openingMoves = moves.filter((m) => m.phase === GamePhase.Opening)
   if (openingMoves.length === 0) return DEFAULT_SCORE
 
-  return cpLossToScore(avgCpLoss(openingMoves), 60)
+  return cpLossToScore(avgCpLoss(openingMoves))
 }
