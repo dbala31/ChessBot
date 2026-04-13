@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { getUserId } from '@/lib/auth/user'
+import { getUserIdFromSession } from '@/lib/auth/session'
 
 export async function GET() {
-  const userId = getUserId()
+  const userId = await getUserIdFromSession()
   const supabase = createServiceClient()
 
   const { data: games, error } = await supabase

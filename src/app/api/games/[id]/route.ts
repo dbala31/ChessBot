@@ -1,28 +1,24 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { getUserId } from '@/lib/auth/user'
+import { getUserIdFromSession } from '@/lib/auth/session'
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const userId = getUserId()
+  const userId = await getUserIdFromSession()
   const supabase = createServiceClient()
 
   // Fetch the game
   const { data: game, error: gameError } = await supabase
     .from('games')
-    .select('id, pgn, source, result, user_color, time_control, opening_eco, played_at, analysis_complete')
+    .select(
+      'id, pgn, source, result, user_color, time_control, opening_eco, played_at, analysis_complete',
+    )
     .eq('id', id)
     .eq('user_id', userId)
     .single()
 
   if (gameError || !game) {
-    return NextResponse.json(
-      { success: false, error: 'Game not found' },
-      { status: 404 },
-    )
+    return NextResponse.json({ success: false, error: 'Game not found' }, { status: 404 })
   }
 
   // Fetch analyzed moves if analysis is complete
@@ -41,7 +37,9 @@ export async function GET(
   if (game.analysis_complete) {
     const { data: moves } = await supabase
       .from('analyzed_moves')
-      .select('ply, fen_before, played_move, best_move, eval_before, eval_after, cp_loss, classification, phase')
+      .select(
+        'ply, fen_before, played_move, best_move, eval_before, eval_after, cp_loss, classification, phase',
+      )
       .eq('game_id', id)
       .order('ply', { ascending: true })
 
@@ -51,9 +49,8 @@ export async function GET(
   // Extract opponent from PGN headers
   const whiteMatch = game.pgn.match(/\[White "([^"]+)"\]/)
   const blackMatch = game.pgn.match(/\[Black "([^"]+)"\]/)
-  const opponent = game.user_color === 'white'
-    ? blackMatch?.[1] ?? 'Unknown'
-    : whiteMatch?.[1] ?? 'Unknown'
+  const opponent =
+    game.user_color === 'white' ? (blackMatch?.[1] ?? 'Unknown') : (whiteMatch?.[1] ?? 'Unknown')
 
   return NextResponse.json({
     success: true,

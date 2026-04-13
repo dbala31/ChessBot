@@ -12,7 +12,9 @@ import {
   Crown,
   BookOpen,
   Play,
+  LogOut,
 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 const NAV_ROUTES = [
   '/dashboard',
@@ -109,8 +111,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           iconContainerClassName="px-4"
         />
 
-        {/* Right spacer for centering */}
-        <div className="w-24" />
+        {/* Logout */}
+        <button
+          onClick={async () => {
+            const supabase = createClient()
+            await supabase.auth.signOut()
+            router.push('/login')
+            router.refresh()
+          }}
+          className="flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          <LogOut size={14} />
+          Sign Out
+        </button>
       </header>
 
       {/* Page content */}

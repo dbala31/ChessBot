@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { getUserId } from '@/lib/auth/user'
+import { getUserIdFromSession } from '@/lib/auth/session'
 
 export async function GET() {
-  const userId = getUserId()
+  const userId = await getUserIdFromSession()
   const supabase = createServiceClient()
 
   // Parallel queries
@@ -16,10 +16,7 @@ export async function GET() {
       .eq('analysis_complete', true),
 
     // Latest skill scores
-    supabase
-      .from('skill_scores')
-      .select('score_type, value')
-      .eq('user_id', userId),
+    supabase.from('skill_scores').select('score_type, value').eq('user_id', userId),
 
     // Drills completed today
     supabase
@@ -80,7 +77,11 @@ export async function GET() {
 
     if (moveStats) {
       const grouped: Record<string, { totalCpLoss: number; count: number; blunders: number }> = {}
-      for (const row of moveStats as Array<{ game_id: string; cp_loss: number; classification: string }>) {
+      for (const row of moveStats as Array<{
+        game_id: string
+        cp_loss: number
+        classification: string
+      }>) {
         if (!grouped[row.game_id]) {
           grouped[row.game_id] = { totalCpLoss: 0, count: 0, blunders: 0 }
         }
@@ -101,7 +102,7 @@ export async function GET() {
   function extractOpponent(pgn: string, userColor: string): string {
     const whiteMatch = pgn.match(/\[White "([^"]+)"\]/)
     const blackMatch = pgn.match(/\[Black "([^"]+)"\]/)
-    return userColor === 'white' ? blackMatch?.[1] ?? 'Unknown' : whiteMatch?.[1] ?? 'Unknown'
+    return userColor === 'white' ? (blackMatch?.[1] ?? 'Unknown') : (whiteMatch?.[1] ?? 'Unknown')
   }
 
   const drillsToday = drillsResult.data ?? []
@@ -119,25 +120,27 @@ export async function GET() {
         scoreType: s.score_type,
         value: s.value,
       })),
-      recentGames: recentGames.map((g: {
-        id: string
-        pgn: string
-        source: string
-        result: string
-        user_color: string
-        time_control: string
-        played_at: string
-        analysis_complete: boolean
-      }) => ({
-        id: g.id,
-        opponent: extractOpponent(g.pgn, g.user_color),
-        result: g.result,
-        timeControl: g.time_control,
-        source: g.source,
-        playedAt: g.played_at,
-        accuracy: accuracyMap[g.id]?.accuracy ?? null,
-        blunders: accuracyMap[g.id]?.blunders ?? null,
-      })),
+      recentGames: recentGames.map(
+        (g: {
+          id: string
+          pgn: string
+          source: string
+          result: string
+          user_color: string
+          time_control: string
+          played_at: string
+          analysis_complete: boolean
+        }) => ({
+          id: g.id,
+          opponent: extractOpponent(g.pgn, g.user_color),
+          result: g.result,
+          timeControl: g.time_control,
+          source: g.source,
+          playedAt: g.played_at,
+          accuracy: accuracyMap[g.id]?.accuracy ?? null,
+          blunders: accuracyMap[g.id]?.blunders ?? null,
+        }),
+      ),
     },
   })
 }

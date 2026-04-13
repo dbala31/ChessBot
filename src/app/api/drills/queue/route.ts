@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { buildDrillQueue } from '@/lib/drills/queue'
-import { getUserId } from '@/lib/auth/user'
+import { getUserIdFromSession } from '@/lib/auth/session'
 import type { LessonType, ScoreType } from '@/types'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const userId = searchParams.get('userId') ?? getUserId()
+  const userId = searchParams.get('userId') ?? (await getUserIdFromSession())
 
   const supabase = createServiceClient()
 
@@ -35,7 +35,15 @@ export async function GET(request: Request) {
   }))
 
   const mappedPuzzles = (puzzles ?? []).map(
-    (p: { id: string; fen: string; solution_pv: string; lesson_type: string; difficulty: number; theme_tags: string[]; source: string }) => ({
+    (p: {
+      id: string
+      fen: string
+      solution_pv: string
+      lesson_type: string
+      difficulty: number
+      theme_tags: string[]
+      source: string
+    }) => ({
       id: p.id,
       fen: p.fen,
       solutionPv: p.solution_pv,

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { ingestGames } from '@/lib/chess-api/ingest'
 import type { GameSource } from '@/types'
-import { getUserId } from '@/lib/auth/user'
+import { getUserIdFromSession } from '@/lib/auth/session'
 
 interface ImportRequestBody {
   readonly username: unknown
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     typeof rawLimit === 'number' && rawLimit > 0 ? Math.min(rawLimit, MAX_LIMIT) : DEFAULT_LIMIT
 
   try {
-    const userId = getUserId()
+    const userId = await getUserIdFromSession()
     const result = await ingestGames(username.trim(), source as GameSource, limit, userId)
 
     return NextResponse.json({

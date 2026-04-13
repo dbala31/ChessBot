@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { getUserId } from '@/lib/auth/user'
+import { getUserIdFromSession } from '@/lib/auth/session'
 
 export async function GET() {
-  const userId = getUserId()
+  const userId = await getUserIdFromSession()
   const supabase = createServiceClient()
 
   const [scoresResult, gamesResult, settingsResult] = await Promise.all([
     supabase.from('skill_scores').select('score_type, value').eq('user_id', userId),
-    supabase.from('games').select('id, result, user_color, opening_eco, analysis_complete, played_at').eq('user_id', userId),
-    supabase.from('user_settings').select('chesscom_username, lichess_username').eq('user_id', userId).single(),
+    supabase
+      .from('games')
+      .select('id, result, user_color, opening_eco, analysis_complete, played_at')
+      .eq('user_id', userId),
+    supabase
+      .from('user_settings')
+      .select('chesscom_username, lichess_username')
+      .eq('user_id', userId)
+      .single(),
   ])
 
   const games = gamesResult.data ?? []
@@ -19,11 +26,15 @@ export async function GET() {
   }))
 
   const totalGames = games.length
-  const analyzedGames = games.filter((g: { analysis_complete: boolean }) => g.analysis_complete).length
+  const analyzedGames = games.filter(
+    (g: { analysis_complete: boolean }) => g.analysis_complete,
+  ).length
 
   // Win/draw/loss rates
-  const wins = games.filter((g: { result: string; user_color: string }) =>
-    (g.result === '1-0' && g.user_color === 'white') || (g.result === '0-1' && g.user_color === 'black'),
+  const wins = games.filter(
+    (g: { result: string; user_color: string }) =>
+      (g.result === '1-0' && g.user_color === 'white') ||
+      (g.result === '0-1' && g.user_color === 'black'),
   ).length
   const draws = games.filter((g: { result: string }) => g.result === '1/2-1/2').length
   const losses = totalGames - wins - draws
@@ -34,11 +45,17 @@ export async function GET() {
 
   // Opening repertoire stats
   const openingMap: Record<string, { games: number; wins: number }> = {}
-  for (const g of games as Array<{ opening_eco: string | null; result: string; user_color: string }>) {
+  for (const g of games as Array<{
+    opening_eco: string | null
+    result: string
+    user_color: string
+  }>) {
     const eco = g.opening_eco ?? 'Unknown'
     if (!openingMap[eco]) openingMap[eco] = { games: 0, wins: 0 }
     openingMap[eco].games += 1
-    const isWin = (g.result === '1-0' && g.user_color === 'white') || (g.result === '0-1' && g.user_color === 'black')
+    const isWin =
+      (g.result === '1-0' && g.user_color === 'white') ||
+      (g.result === '0-1' && g.user_color === 'black')
     if (isWin) openingMap[eco].wins += 1
   }
 
@@ -64,13 +81,19 @@ export async function GET() {
       .in('game_id', analyzedIds)
 
     if (moves && moves.length > 0) {
-      const totalCpLoss = (moves as Array<{ cp_loss: number }>).reduce((sum, m) => sum + m.cp_loss, 0)
+      const totalCpLoss = (moves as Array<{ cp_loss: number }>).reduce(
+        (sum, m) => sum + m.cp_loss,
+        0,
+      )
       const avgCpLoss = totalCpLoss / moves.length
       avgAccuracy = Math.round(Math.max(0, Math.min(100, 100 - avgCpLoss * 0.5)))
     }
   }
 
-  const username = settingsResult.data?.chesscom_username ?? settingsResult.data?.lichess_username ?? 'ChessBot User'
+  const username =
+    settingsResult.data?.chesscom_username ??
+    settingsResult.data?.lichess_username ??
+    'ChessBot User'
 
   return NextResponse.json({
     success: true,

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { getUserId } from '@/lib/auth/user'
+import { getUserIdFromSession } from '@/lib/auth/session'
 
 export async function GET() {
-  const userId = getUserId()
+  const userId = await getUserIdFromSession()
   const supabase = createServiceClient()
 
   const { data, error } = await supabase
@@ -23,7 +23,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const userId = getUserId()
+  const userId = await getUserIdFromSession()
   const supabase = createServiceClient()
 
   const body = await request.json()
@@ -32,16 +32,14 @@ export async function POST(request: Request) {
     lichessUsername?: string
   }
 
-  const { error } = await supabase
-    .from('user_settings')
-    .upsert(
-      {
-        user_id: userId,
-        chesscom_username: chesscomUsername ?? null,
-        lichess_username: lichessUsername ?? null,
-      },
-      { onConflict: 'user_id' },
-    )
+  const { error } = await supabase.from('user_settings').upsert(
+    {
+      user_id: userId,
+      chesscom_username: chesscomUsername ?? null,
+      lichess_username: lichessUsername ?? null,
+    },
+    { onConflict: 'user_id' },
+  )
 
   if (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })

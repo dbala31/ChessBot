@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { computeAllSkills } from '@/lib/analysis/computeSkills'
-import { getUserId } from '@/lib/auth/user'
+import { getUserIdFromSession } from '@/lib/auth/session'
 
 export async function POST(request: Request) {
   let userId: string
 
   try {
     const body = (await request.json()) as { userId?: unknown }
-    userId = typeof body.userId === 'string' && body.userId.trim().length > 0
-      ? body.userId
-      : getUserId()
+    userId =
+      typeof body.userId === 'string' && body.userId.trim().length > 0
+        ? body.userId
+        : await getUserIdFromSession()
   } catch {
-    userId = getUserId()
+    userId = await getUserIdFromSession()
   }
 
   try {
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const userId = searchParams.get('userId') ?? getUserId()
+  const userId = searchParams.get('userId') ?? (await getUserIdFromSession())
 
   const supabase = createServiceClient()
 
