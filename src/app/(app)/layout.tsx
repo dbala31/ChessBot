@@ -3,9 +3,26 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { LimelightNav } from '@/components/ui/limelight-nav'
 import type { NavItem } from '@/components/ui/limelight-nav'
-import { LayoutDashboard, Target, Gamepad2, BarChart3, Settings, Crown } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Target,
+  Gamepad2,
+  BarChart3,
+  Settings,
+  Crown,
+  BookOpen,
+  Play,
+} from 'lucide-react'
 
-const NAV_ROUTES = ['/dashboard', '/report', '/train', '/games', '/settings'] as const
+const NAV_ROUTES = [
+  '/dashboard',
+  '/report',
+  '/train',
+  '/theory',
+  '/videos',
+  '/games',
+  '/settings',
+] as const
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -33,6 +50,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       icon: <Target />,
       label: 'Training',
       onClick: () => router.push('/train'),
+    },
+    {
+      id: 'theory',
+      icon: <BookOpen />,
+      label: 'Theory',
+      onClick: () => router.push('/theory'),
+    },
+    {
+      id: 'videos',
+      icon: <Play />,
+      label: 'Videos',
+      onClick: () => router.push('/videos'),
     },
     {
       id: 'games',
