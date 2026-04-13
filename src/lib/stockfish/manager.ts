@@ -132,7 +132,7 @@ export class StockfishManager {
   analyzePosition(
     fen: string,
     depth: number = DEFAULT_DEPTH,
-    timeoutMs: number = 15000,
+    timeoutMs: number = 30000,
   ): Promise<StockfishResult> {
     return new Promise((resolve, reject) => {
       if (this.destroyed) {
@@ -193,8 +193,30 @@ export class StockfishManager {
       replay.move(moves[i].san)
       const fenAfter = replay.fen()
 
-      // Get eval after the move
-      const evalAfter = await this.analyzePosition(fenAfter)
+      // Check if the position after the move is terminal (game over)
+      let evalAfter: StockfishResult
+      if (replay.isCheckmate()) {
+        // The side to move is checkmated — eval is very bad for them (good for mover)
+        evalAfter = {
+          fen: fenAfter,
+          bestMove: '(none)',
+          eval: -10000,
+          isMate: true,
+          mateIn: 0,
+          pv: [],
+        }
+      } else if (replay.isStalemate() || replay.isDraw()) {
+        evalAfter = {
+          fen: fenAfter,
+          bestMove: '(none)',
+          eval: 0,
+          isMate: false,
+          mateIn: null,
+          pv: [],
+        }
+      } else {
+        evalAfter = await this.analyzePosition(fenAfter)
+      }
 
       // Eval is from the perspective of the side to move.
       // After a move, the side to move flips, so we negate evalAfter for comparison.
