@@ -1,9 +1,7 @@
 /// <reference lib="webworker" />
+/* eslint-disable no-var */
 
-// Stockfish.js is designed to be loaded as a worker. It uses onmessage/postMessage
-// internally. We load it via importScripts and relay UCI commands.
-
-declare const self: DedicatedWorkerGlobalScope
+const workerSelf = self as unknown as DedicatedWorkerGlobalScope
 
 interface WorkerMessage {
   readonly type: 'uci-command'
@@ -19,16 +17,14 @@ interface WorkerResponse {
 let engineWorker: Worker | null = null
 
 function sendResponse(response: WorkerResponse) {
-  self.postMessage(response)
+  workerSelf.postMessage(response)
 }
 
 function initEngine() {
   try {
-    // stockfish.js exposes itself as a worker-compatible module.
-    // We create a nested worker from the npm package.
-    engineWorker = new Worker(
-      new URL('stockfish.js/stockfish.wasm.js', import.meta.url),
-    )
+    // Load Stockfish WASM from the public directory.
+    // This avoids bundler issues with the npm module's Node.js require() calls.
+    engineWorker = new Worker('/stockfish/stockfish.wasm.js')
 
     engineWorker.onmessage = (event: MessageEvent<string>) => {
       sendResponse({ type: 'uci-output', line: event.data })
@@ -47,7 +43,7 @@ function initEngine() {
   }
 }
 
-self.onmessage = (event: MessageEvent<WorkerMessage>) => {
+workerSelf.onmessage = (event: MessageEvent<WorkerMessage>) => {
   const { type, command } = event.data
 
   if (type === 'uci-command') {
