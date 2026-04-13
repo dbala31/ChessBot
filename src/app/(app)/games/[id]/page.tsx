@@ -8,7 +8,18 @@ import { MoveList } from '@/components/move-list/MoveList'
 import { MoveClassification } from '@/types'
 import { Chess } from 'chess.js'
 import type { Key } from 'chessground/types'
-import { SkipBack, ChevronLeft, ChevronRight, SkipForward, Sparkles, Target } from 'lucide-react'
+import {
+  SkipBack,
+  ChevronLeft,
+  ChevronRight,
+  SkipForward,
+  Sparkles,
+  Target,
+  Loader2,
+  X as XIcon,
+} from 'lucide-react'
+import type { ExplainMoveRequest } from '@/types'
+import { GamePhase } from '@/types'
 
 // Mock data for design — Italian Game (shortened)
 const MOCK_PGN =
@@ -91,6 +102,48 @@ const MOCK_EVAL_DATA = MOCK_MOVES.map((_, i) => ({
 
 export default function GameReviewPage() {
   const [currentPly, setCurrentPly] = useState(0)
+  const [explanation, setExplanation] = useState<string | null>(null)
+  const [isExplaining, setIsExplaining] = useState(false)
+  const [explainPly, setExplainPly] = useState<number | null>(null)
+
+  const handleExplain = useCallback(async (ply: number) => {
+    const move = MOCK_MOVES[ply - 1]
+    if (!move) return
+
+    setIsExplaining(true)
+    setExplainPly(ply)
+    setExplanation(null)
+
+    const replayForFen = new Chess()
+    replayForFen.loadPgn(MOCK_PGN)
+    const movesForFen = replayForFen.history({ verbose: true })
+    const posChess = new Chess()
+    for (let i = 0; i < ply - 1 && i < movesForFen.length; i++) {
+      posChess.move(movesForFen[i].san)
+    }
+
+    const req: ExplainMoveRequest = {
+      fen: posChess.fen(),
+      playedMove: move.san,
+      bestMove: move.san, // In real implementation, comes from analysis
+      cpLoss: move.cpLoss,
+      phase: GamePhase.Middlegame,
+    }
+
+    try {
+      const res = await fetch('/api/explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req),
+      })
+      const data = await res.json()
+      setExplanation(data.explanation ?? data.error ?? 'No explanation available.')
+    } catch {
+      setExplanation('Failed to fetch explanation. Please try again.')
+    } finally {
+      setIsExplaining(false)
+    }
+  }, [])
 
   // Compute FEN at current ply
   const chess = new Chess()
@@ -195,10 +248,16 @@ export default function GameReviewPage() {
               MOCK_MOVES[currentPly - 1].classification === MoveClassification.Blunder) && (
               <div className="flex gap-2">
                 <button
-                  className="flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium text-white transition-colors duration-150"
+                  onClick={() => handleExplain(currentPly)}
+                  disabled={isExplaining}
+                  className="flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium text-white transition-colors duration-150 disabled:opacity-60"
                   style={{ background: 'var(--accent)' }}
                 >
-                  <Sparkles size={13} />
+                  {isExplaining && explainPly === currentPly ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={13} />
+                  )}
                   Explain with AI
                 </button>
                 <button
@@ -210,6 +269,39 @@ export default function GameReviewPage() {
                 </button>
               </div>
             )}
+
+          {explanation && explainPly !== null && (
+            <div
+              className="card mt-2 rounded-lg p-4"
+              style={{ borderLeft: '3px solid var(--accent)' }}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span
+                  className="flex items-center gap-1.5 text-xs font-semibold"
+                  style={{ color: 'var(--accent)' }}
+                >
+                  <Sparkles size={13} />
+                  AI Explanation — Move {explainPly}
+                </span>
+                <button
+                  onClick={() => {
+                    setExplanation(null)
+                    setExplainPly(null)
+                  }}
+                  className="cursor-pointer rounded p-0.5 transition-colors duration-150"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <XIcon size={14} />
+                </button>
+              </div>
+              <div
+                className="text-xs leading-relaxed whitespace-pre-wrap"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                {explanation}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
