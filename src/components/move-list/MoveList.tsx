@@ -85,12 +85,8 @@ export function MoveList({ moves, currentPly, onClickPly }: MoveListProps) {
     const color = move.classification
       ? CLASSIFICATION_COLORS[move.classification]
       : 'var(--text-primary)'
-    const symbol = move.classification
-      ? CLASSIFICATION_SYMBOLS[move.classification]
-      : ''
-    const dotColor = move.classification
-      ? CLASSIFICATION_DOTS[move.classification]
-      : ''
+    const symbol = move.classification ? CLASSIFICATION_SYMBOLS[move.classification] : ''
+    const dotColor = move.classification ? CLASSIFICATION_DOTS[move.classification] : ''
     const isActive = move.ply === currentPly
 
     return (
@@ -103,10 +99,17 @@ export function MoveList({ moves, currentPly, onClickPly }: MoveListProps) {
           background: isActive ? 'var(--accent-light)' : 'transparent',
           fontWeight: isActive ? 600 : 400,
         }}
-        title={move.classification ? `${move.classification}${move.cpLoss ? ` (${move.cpLoss}cp)` : ''}` : undefined}
+        title={
+          move.classification
+            ? `${move.classification}${move.cpLoss ? ` (${move.cpLoss}cp)` : ''}`
+            : undefined
+        }
       >
         {dotColor && (
-          <span className="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ background: dotColor }} />
+          <span
+            className="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full"
+            style={{ background: dotColor }}
+          />
         )}
         <span>{move.san}</span>
         {symbol && <span className="text-[9px] font-bold">{symbol}</span>}
@@ -122,7 +125,10 @@ export function MoveList({ moves, currentPly, onClickPly }: MoveListProps) {
           className="flex items-center gap-0.5 px-2 py-px"
           style={{ borderBottom: '1px solid var(--border)' }}
         >
-          <span className="w-7 flex-shrink-0 text-right font-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>
+          <span
+            className="w-7 flex-shrink-0 text-right font-mono text-[10px]"
+            style={{ color: 'var(--text-muted)' }}
+          >
             {pair.moveNumber}.
           </span>
           {renderMove(pair.white)}

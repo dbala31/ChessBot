@@ -20,7 +20,9 @@ function formatEval(cp: number, isMate: boolean, mateIn: number | null): string 
 
 export function EvalBar({ eval: evaluation, isMate = false, mateIn = null }: EvalBarProps) {
   const whitePercent = isMate
-    ? mateIn !== null && mateIn > 0 ? 95 : 5
+    ? mateIn !== null && mateIn > 0
+      ? 95
+      : 5
     : evalToPercentage(evaluation)
 
   return (
@@ -37,7 +39,7 @@ export function EvalBar({ eval: evaluation, isMate = false, mateIn = null }: Eva
         style={{ height: `${whitePercent}%`, background: 'var(--text-primary)' }}
       >
         <span
-          className="absolute inset-x-0 text-center text-[9px] font-bold leading-tight"
+          className="absolute inset-x-0 text-center text-[9px] leading-tight font-bold"
           style={{
             color: 'var(--bg-primary)',
             ...(whitePercent > 50 ? { top: '3px' } : { bottom: '3px' }),

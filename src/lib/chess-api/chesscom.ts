@@ -76,8 +76,7 @@ async function fetchWithHeaders(url: string): Promise<Response> {
   return response
 }
 
-const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms))
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
 
 export async function fetchChesscomGames(
   username: string,
@@ -113,8 +112,7 @@ export async function fetchChesscomGames(
       if (game.rules !== 'chess') continue
       if (!game.pgn || game.pgn.length === 0) continue
 
-      const isWhite =
-        game.white.username.toLowerCase() === normalizedUsername
+      const isWhite = game.white.username.toLowerCase() === normalizedUsername
 
       games.push({
         pgn: game.pgn,

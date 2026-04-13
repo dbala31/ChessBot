@@ -8,7 +8,9 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('user_settings')
-    .select('chesscom_username, lichess_username, onboarding_complete, current_rating, target_rating')
+    .select(
+      'chesscom_username, lichess_username, onboarding_complete, current_rating, target_rating',
+    )
     .eq('user_id', userId)
     .single()
 
@@ -18,7 +20,13 @@ export async function GET() {
 
   return NextResponse.json({
     success: true,
-    data: data ?? { chesscom_username: null, lichess_username: null, onboarding_complete: false, current_rating: null, target_rating: null },
+    data: data ?? {
+      chesscom_username: null,
+      lichess_username: null,
+      onboarding_complete: false,
+      current_rating: null,
+      target_rating: null,
+    },
   })
 }
 
@@ -43,10 +51,9 @@ export async function POST(request: Request) {
   if (currentRating !== undefined) upsertData.current_rating = currentRating
   if (targetRating !== undefined) upsertData.target_rating = targetRating
 
-  const { error } = await supabase.from('user_settings').upsert(
-    upsertData,
-    { onConflict: 'user_id' },
-  )
+  const { error } = await supabase
+    .from('user_settings')
+    .upsert(upsertData, { onConflict: 'user_id' })
 
   if (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })

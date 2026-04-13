@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     .filter((g: { analysis_complete: boolean }) => g.analysis_complete)
     .map((g: { id: string }) => g.id)
 
-  let accuracyMap: Record<string, { accuracy: number; blunders: number }> = {}
+  const accuracyMap: Record<string, { accuracy: number; blunders: number }> = {}
 
   if (analyzedGameIds.length > 0) {
     const { data: stats } = await supabase

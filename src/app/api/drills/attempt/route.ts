@@ -13,10 +13,7 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as AttemptBody
   } catch {
-    return NextResponse.json(
-      { success: false, error: 'Invalid JSON body' },
-      { status: 400 },
-    )
+    return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 })
   }
 
   const { userId, puzzleId, correct, timeTakenMs } = body
@@ -53,10 +50,7 @@ export async function POST(request: Request) {
   })
 
   if (error) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 },
-    )
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })

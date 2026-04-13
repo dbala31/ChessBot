@@ -112,7 +112,8 @@ Players who prefer solid positions, clear plans, and strategic battles over tact
     title: "King's Indian Defense",
     category: 'openings',
     difficulty: 'advanced',
-    description: 'An aggressive hypermodern defense allowing White to build a big center, then counterattacking.',
+    description:
+      'An aggressive hypermodern defense allowing White to build a big center, then counterattacking.',
     fen: 'rnbqkb1r/pppppp1p/5np1/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3',
     keyMoves: ['d4', 'Nf6', 'c4', 'g6', 'Nc3', 'Bg7'],
     content: `The King's Indian Defense is a hypermodern opening where Black lets White build an imposing center with pawns on c4, d4, and e4, then strikes back with ...e5 or ...c5.
@@ -331,7 +332,8 @@ Queens, bishops, and rooks can all deliver forks. Queen forks are especially com
     title: 'Skewers',
     category: 'tactics',
     difficulty: 'beginner',
-    description: 'An attack on a valuable piece that forces it to move, exposing a piece behind it.',
+    description:
+      'An attack on a valuable piece that forces it to move, exposing a piece behind it.',
     fen: '4k3/8/8/8/8/4b3/8/R3K3 w Q - 0 1',
     keyMoves: ['Ra8+', 'Kd7', 'Ra3'],
     content: `A skewer is the reverse of a pin. You attack a valuable piece, and when it moves, you capture the piece behind it.

@@ -26,7 +26,9 @@ export async function GET() {
   }))
 
   const totalGames = games.length
-  const analyzedGames = games.filter((g: { analysis_complete: boolean }) => g.analysis_complete).length
+  const analyzedGames = games.filter(
+    (g: { analysis_complete: boolean }) => g.analysis_complete,
+  ).length
   const analyzedIds = games
     .filter((g: { analysis_complete: boolean }) => g.analysis_complete)
     .map((g: { id: string }) => g.id)
@@ -68,7 +70,15 @@ export async function GET() {
   const phaseStats = phases.map((phase) => {
     const phaseMoves = allMoves.filter((m) => m.phase === phase)
     if (phaseMoves.length === 0)
-      return { phase, moveCount: 0, avgCpLoss: 0, blunders: 0, mistakes: 0, bestMoves: 0, accuracy: 0 }
+      return {
+        phase,
+        moveCount: 0,
+        avgCpLoss: 0,
+        blunders: 0,
+        mistakes: 0,
+        bestMoves: 0,
+        accuracy: 0,
+      }
 
     const avgCpLoss = Math.round(phaseMoves.reduce((s, m) => s + m.cp_loss, 0) / phaseMoves.length)
     const blunders = phaseMoves.filter((m) => m.classification === 'blunder').length
@@ -76,7 +86,15 @@ export async function GET() {
     const bestMoves = phaseMoves.filter((m) => m.classification === 'best').length
     const accuracy = Math.round(Math.max(0, Math.min(100, 100 - avgCpLoss * 0.5)))
 
-    return { phase, moveCount: phaseMoves.length, avgCpLoss, blunders, mistakes, bestMoves, accuracy }
+    return {
+      phase,
+      moveCount: phaseMoves.length,
+      avgCpLoss,
+      blunders,
+      mistakes,
+      bestMoves,
+      accuracy,
+    }
   })
 
   // Overall stats

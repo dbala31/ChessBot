@@ -5,23 +5,15 @@ import { computeAllSkills } from '@/lib/analysis/computeSkills'
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized' },
-      { status: 401 },
-    )
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   }
 
   const supabase = createServiceClient()
 
-  const { data: users, error } = await supabase
-    .from('user_settings')
-    .select('user_id')
+  const { data: users, error } = await supabase.from('user_settings').select('user_id')
 
   if (error) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 },
-    )
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 
   const results: Array<{

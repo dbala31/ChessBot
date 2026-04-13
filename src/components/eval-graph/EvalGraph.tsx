@@ -76,9 +76,7 @@ export function EvalGraph({ data, currentPly, onClickPly }: EvalGraphProps) {
               const v = Number(value)
               return [`${v >= 0 ? '+' : ''}${v.toFixed(1)}`, 'Eval']
             }}
-            labelFormatter={(label: unknown) =>
-              `Move ${Math.ceil(Number(label) / 2)}`
-            }
+            labelFormatter={(label: unknown) => `Move ${Math.ceil(Number(label) / 2)}`}
           />
           <Area
             type="monotone"
@@ -92,8 +90,7 @@ export function EvalGraph({ data, currentPly, onClickPly }: EvalGraphProps) {
                 cy?: number
                 payload?: { isError: boolean; ply: number }
               }
-              if (!p.payload?.isError)
-                return <circle key={p.payload?.ply ?? 0} r={0} />
+              if (!p.payload?.isError) return <circle key={p.payload?.ply ?? 0} r={0} />
               return (
                 <circle
                   key={p.payload.ply}

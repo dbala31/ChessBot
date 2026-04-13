@@ -18,16 +18,16 @@ export default function TheoryDetailPage() {
   if (!topic) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Topic not found</p>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          Topic not found
+        </p>
       </div>
     )
   }
 
   // Replay key moves
   const chess = new Chess(topic.fen)
-  const positions: Array<{ fen: string; lastMove?: readonly [Key, Key] }> = [
-    { fen: topic.fen },
-  ]
+  const positions: Array<{ fen: string; lastMove?: readonly [Key, Key] }> = [{ fen: topic.fen }]
 
   const tempChess = new Chess(topic.fen)
   for (const move of topic.keyMoves) {
@@ -83,8 +83,12 @@ export default function TheoryDetailPage() {
               <ChevronLeft size={16} />
             </button>
 
-            <span className="min-w-[80px] text-center text-xs" style={{ color: 'var(--text-muted)' }}>
-              {currentMoveIndex === 0 ? 'Start' : `Move ${currentMoveIndex}`} / {positions.length - 1}
+            <span
+              className="min-w-[80px] text-center text-xs"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              {currentMoveIndex === 0 ? 'Start' : `Move ${currentMoveIndex}`} /{' '}
+              {positions.length - 1}
             </span>
 
             <button
@@ -99,8 +103,11 @@ export default function TheoryDetailPage() {
 
           {/* Key moves display */}
           {topic.keyMoves.length > 0 && (
-            <div className="mt-3 card p-3">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+            <div className="card mt-3 p-3">
+              <p
+                className="mb-2 text-[10px] font-semibold tracking-wider uppercase"
+                style={{ color: 'var(--text-muted)' }}
+              >
                 Key Moves
               </p>
               <div className="flex flex-wrap gap-1">
@@ -110,11 +117,13 @@ export default function TheoryDetailPage() {
                     onClick={() => setCurrentMoveIndex(i + 1)}
                     className="cursor-pointer rounded px-2 py-1 font-mono text-xs transition-colors duration-150"
                     style={{
-                      background: currentMoveIndex === i + 1 ? 'var(--accent-light)' : 'var(--bg-tertiary)',
+                      background:
+                        currentMoveIndex === i + 1 ? 'var(--accent-light)' : 'var(--bg-tertiary)',
                       color: currentMoveIndex === i + 1 ? 'var(--accent)' : 'var(--text-secondary)',
                     }}
                   >
-                    {i % 2 === 0 ? `${Math.floor(i / 2) + 1}. ` : ''}{move}
+                    {i % 2 === 0 ? `${Math.floor(i / 2) + 1}. ` : ''}
+                    {move}
                   </button>
                 ))}
               </div>
@@ -152,7 +161,11 @@ export default function TheoryDetailPage() {
               // Handle bold headers
               if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
                 return (
-                  <h3 key={i} className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  <h3
+                    key={i}
+                    className="text-sm font-semibold"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     {paragraph.replace(/\*\*/g, '')}
                   </h3>
                 )
@@ -169,7 +182,11 @@ export default function TheoryDetailPage() {
                     // Bold header line
                     if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
                       return (
-                        <h3 key={j} className="mt-2 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        <h3
+                          key={j}
+                          className="mt-2 text-sm font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
                           {trimmed.replace(/\*\*/g, '')}
                         </h3>
                       )
@@ -179,8 +196,14 @@ export default function TheoryDetailPage() {
                     const boldMatch = trimmed.match(/^\*\*(.+?)\*\*(.*)$/)
                     if (boldMatch) {
                       return (
-                        <p key={j} className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                          <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{boldMatch[1]}</span>
+                        <p
+                          key={j}
+                          className="text-xs leading-relaxed"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
+                          <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                            {boldMatch[1]}
+                          </span>
                           {boldMatch[2]}
                         </p>
                       )
@@ -189,7 +212,11 @@ export default function TheoryDetailPage() {
                     // List items
                     if (trimmed.startsWith('- ')) {
                       return (
-                        <p key={j} className="ml-3 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                        <p
+                          key={j}
+                          className="ml-3 text-xs leading-relaxed"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
                           <span style={{ color: 'var(--accent)' }}>•</span> {trimmed.slice(2)}
                         </p>
                       )
@@ -198,7 +225,11 @@ export default function TheoryDetailPage() {
                     // Numbered items
                     if (/^\d+\./.test(trimmed)) {
                       return (
-                        <p key={j} className="ml-3 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                        <p
+                          key={j}
+                          className="ml-3 text-xs leading-relaxed"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
                           {trimmed}
                         </p>
                       )
@@ -206,7 +237,11 @@ export default function TheoryDetailPage() {
 
                     // Regular text
                     return (
-                      <p key={j} className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                      <p
+                        key={j}
+                        className="text-xs leading-relaxed"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         {trimmed}
                       </p>
                     )

@@ -25,9 +25,7 @@ export async function saveAnalysis(
     .eq('game_id', gameId)
 
   if (deleteError) {
-    throw new Error(
-      `Failed to clear existing analysis: ${deleteError.message}`,
-    )
+    throw new Error(`Failed to clear existing analysis: ${deleteError.message}`)
   }
 
   // Insert new analysis
@@ -44,9 +42,7 @@ export async function saveAnalysis(
     phase: move.phase,
   }))
 
-  const { error: insertError } = await supabase
-    .from('analyzed_moves')
-    .insert(rows)
+  const { error: insertError } = await supabase.from('analyzed_moves').insert(rows)
 
   if (insertError) {
     throw new Error(`Failed to save analysis: ${insertError.message}`)
@@ -59,8 +55,6 @@ export async function saveAnalysis(
     .eq('id', gameId)
 
   if (updateError) {
-    throw new Error(
-      `Failed to mark game as analyzed: ${updateError.message}`,
-    )
+    throw new Error(`Failed to mark game as analyzed: ${updateError.message}`)
   }
 }

@@ -10,10 +10,7 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as TriggerRequestBody
   } catch {
-    return NextResponse.json(
-      { success: false, error: 'Invalid JSON body' },
-      { status: 400 },
-    )
+    return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 })
   }
 
   const { gameIds } = body
@@ -48,9 +45,7 @@ export async function POST(request: Request) {
 
   // Return PGNs for client-side analysis (actual analysis happens in Web Worker)
   const gamesToAnalyze = (games ?? [])
-    .filter(
-      (g: { analysis_complete: boolean }) => !g.analysis_complete,
-    )
+    .filter((g: { analysis_complete: boolean }) => !g.analysis_complete)
     .map((g: { id: string; pgn: string }) => ({
       id: g.id,
       pgn: g.pgn,

@@ -129,18 +129,13 @@ describe('fetchLichessGames', () => {
     expect(urlStr).toContain('pgnInJson=true')
     expect(urlStr).toContain('opening=true')
     expect(urlStr).toContain('clocks=true')
-    expect((options as RequestInit).headers).toHaveProperty(
-      'Accept',
-      'application/x-ndjson',
-    )
+    expect((options as RequestInit).headers).toHaveProperty('Accept', 'application/x-ndjson')
   })
 
   it('filters out non-standard variants', async () => {
     const chess960 = { ...SAMPLE_GAME, id: 'x960', variant: 'chess960' }
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
-    fetchSpy.mockResolvedValueOnce(
-      makeNdjsonResponse([chess960, SAMPLE_GAME]),
-    )
+    fetchSpy.mockResolvedValueOnce(makeNdjsonResponse([chess960, SAMPLE_GAME]))
 
     const games = await fetchLichessGames('testuser', 10)
     expect(games).toHaveLength(1)
@@ -151,18 +146,14 @@ describe('fetchLichessGames', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     fetchSpy.mockResolvedValueOnce(new Response(null, { status: 404 }))
 
-    await expect(fetchLichessGames('nonexistent', 10)).rejects.toThrow(
-      /not found/i,
-    )
+    await expect(fetchLichessGames('nonexistent', 10)).rejects.toThrow(/not found/i)
   })
 
   it('throws on 429 (rate limited)', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     fetchSpy.mockResolvedValueOnce(new Response(null, { status: 429 }))
 
-    await expect(fetchLichessGames('testuser', 10)).rejects.toThrow(
-      /rate limit/i,
-    )
+    await expect(fetchLichessGames('testuser', 10)).rejects.toThrow(/rate limit/i)
   })
 
   it('returns empty array when no games', async () => {

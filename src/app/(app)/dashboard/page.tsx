@@ -4,7 +4,15 @@ import { useState, useEffect } from 'react'
 import { SkillRadar } from '@/components/skill-radar/SkillRadar'
 import { ScoreType } from '@/types'
 import Link from 'next/link'
-import { TrendingUp, Flame, Target, ArrowRight, AlertTriangle, BarChart3, Loader2 } from 'lucide-react'
+import {
+  TrendingUp,
+  Flame,
+  Target,
+  ArrowRight,
+  AlertTriangle,
+  BarChart3,
+  Loader2,
+} from 'lucide-react'
 
 const SKILL_LABELS: Record<string, string> = {
   [ScoreType.Tactics]: 'Tactics',
@@ -63,9 +71,7 @@ export default function DashboardPage() {
 
   const scores = data?.scores ?? []
   const radarScores = scores.map((s) => ({ scoreType: s.scoreType as ScoreType, value: s.value }))
-  const weakest = scores.length > 0
-    ? [...scores].sort((a, b) => a.value - b.value)[0]
-    : null
+  const weakest = scores.length > 0 ? [...scores].sort((a, b) => a.value - b.value)[0] : null
 
   const gamesAnalyzed = data?.gamesAnalyzed ?? 0
   const streakDays = data?.streak ?? 0
@@ -78,9 +84,27 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
-          { label: 'Games Analyzed', value: String(gamesAnalyzed), icon: BarChart3, change: gamesAnalyzed > 0 ? 'Stockfish analysis complete' : 'Import & analyze games' },
-          { label: 'Training Streak', value: streakDays > 0 ? `${streakDays} day${streakDays !== 1 ? 's' : ''}` : '0 days', icon: Flame, change: streakDays > 0 ? 'Keep it up!' : 'Start training today' },
-          { label: 'Drills Today', value: `${drillsToday} / ${drillsTarget}`, icon: Target, change: drillsToday >= drillsTarget ? 'Daily goal reached!' : `${Math.round((drillsToday / drillsTarget) * 100)}% complete` },
+          {
+            label: 'Games Analyzed',
+            value: String(gamesAnalyzed),
+            icon: BarChart3,
+            change: gamesAnalyzed > 0 ? 'Stockfish analysis complete' : 'Import & analyze games',
+          },
+          {
+            label: 'Training Streak',
+            value: streakDays > 0 ? `${streakDays} day${streakDays !== 1 ? 's' : ''}` : '0 days',
+            icon: Flame,
+            change: streakDays > 0 ? 'Keep it up!' : 'Start training today',
+          },
+          {
+            label: 'Drills Today',
+            value: `${drillsToday} / ${drillsTarget}`,
+            icon: Target,
+            change:
+              drillsToday >= drillsTarget
+                ? 'Daily goal reached!'
+                : `${Math.round((drillsToday / drillsTarget) * 100)}% complete`,
+          },
         ].map((stat) => (
           <div key={stat.label} className="card p-4">
             <div className="mb-3 flex items-center justify-between">
@@ -113,7 +137,9 @@ export default function DashboardPage() {
                 Skill Overview
               </h2>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                {gamesAnalyzed > 0 ? `Based on ${gamesAnalyzed} analyzed games` : 'Import and analyze games to see your skills'}
+                {gamesAnalyzed > 0
+                  ? `Based on ${gamesAnalyzed} analyzed games`
+                  : 'Import and analyze games to see your skills'}
               </p>
             </div>
           </div>
@@ -122,7 +148,11 @@ export default function DashboardPage() {
           ) : (
             <div className="flex h-48 items-center justify-center">
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                No skill data yet. <Link href="/settings" style={{ color: 'var(--accent)' }}>Import games</Link> to get started.
+                No skill data yet.{' '}
+                <Link href="/settings" style={{ color: 'var(--accent)' }}>
+                  Import games
+                </Link>{' '}
+                to get started.
               </p>
             </div>
           )}
@@ -154,7 +184,10 @@ export default function DashboardPage() {
               <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                 Score: {Math.round(weakest.value)}/100
               </p>
-              <p className="mt-2 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              <p
+                className="mt-2 text-xs leading-relaxed"
+                style={{ color: 'var(--text-secondary)' }}
+              >
                 Focus training here for the biggest rating improvement.
               </p>
             </div>
@@ -269,16 +302,28 @@ export default function DashboardPage() {
                     <td
                       className="px-5 py-2.5 font-medium"
                       style={{
-                        color: game.accuracy != null
-                          ? game.accuracy >= 85 ? 'var(--success)' : game.accuracy >= 70 ? 'var(--warning)' : 'var(--danger)'
-                          : 'var(--text-muted)',
+                        color:
+                          game.accuracy != null
+                            ? game.accuracy >= 85
+                              ? 'var(--success)'
+                              : game.accuracy >= 70
+                                ? 'var(--warning)'
+                                : 'var(--danger)'
+                            : 'var(--text-muted)',
                       }}
                     >
                       {game.accuracy != null ? `${game.accuracy}%` : '\u2014'}
                     </td>
                     <td
                       className="px-5 py-2.5"
-                      style={{ color: game.blunders != null ? (game.blunders === 0 ? 'var(--success)' : 'var(--danger)') : 'var(--text-muted)' }}
+                      style={{
+                        color:
+                          game.blunders != null
+                            ? game.blunders === 0
+                              ? 'var(--success)'
+                              : 'var(--danger)'
+                            : 'var(--text-muted)',
+                      }}
                     >
                       {game.blunders != null ? game.blunders : '\u2014'}
                     </td>
@@ -295,7 +340,11 @@ export default function DashboardPage() {
           ) : (
             <div className="px-5 py-8 text-center">
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                No games yet. <Link href="/settings" style={{ color: 'var(--accent)' }}>Import games</Link> to get started.
+                No games yet.{' '}
+                <Link href="/settings" style={{ color: 'var(--accent)' }}>
+                  Import games
+                </Link>{' '}
+                to get started.
               </p>
             </div>
           )}

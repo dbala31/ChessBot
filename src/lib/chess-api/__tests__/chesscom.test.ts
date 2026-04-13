@@ -54,10 +54,7 @@ const SAMPLE_GAME_BLACK = {
     result: 'checkmated',
     username: 'testuser',
   },
-  pgn: SAMPLE_PGN.replace('[Result "1-0"]', '[Result "0-1"]').replace(
-    '1-0',
-    '0-1',
-  ),
+  pgn: SAMPLE_PGN.replace('[Result "1-0"]', '[Result "0-1"]').replace('1-0', '0-1'),
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -83,9 +80,7 @@ describe('fetchChesscomGames', () => {
     )
 
     // Newest month first (March)
-    fetchSpy.mockResolvedValueOnce(
-      new Response(JSON.stringify({ games: [SAMPLE_GAME] })),
-    )
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ games: [SAMPLE_GAME] })))
 
     const games = await fetchChesscomGames('testuser', 1)
 
@@ -108,15 +103,11 @@ describe('fetchChesscomGames', () => {
     fetchSpy.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          archives: [
-            'https://api.chess.com/pub/player/testuser/games/2026/03',
-          ],
+          archives: ['https://api.chess.com/pub/player/testuser/games/2026/03'],
         }),
       ),
     )
-    fetchSpy.mockResolvedValueOnce(
-      new Response(JSON.stringify({ games: [SAMPLE_GAME_BLACK] })),
-    )
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ games: [SAMPLE_GAME_BLACK] })))
 
     const games = await fetchChesscomGames('testuser', 1)
     expect(games[0].userColor).toBe('black')
@@ -138,9 +129,7 @@ describe('fetchChesscomGames', () => {
     )
 
     // March (newest) — has 1 game
-    fetchSpy.mockResolvedValueOnce(
-      new Response(JSON.stringify({ games: [SAMPLE_GAME] })),
-    )
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ games: [SAMPLE_GAME] })))
 
     // February — has 1 game, but limit=1 already met
     const games = await fetchChesscomGames('testuser', 1)
@@ -156,9 +145,7 @@ describe('fetchChesscomGames', () => {
     fetchSpy.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          archives: [
-            'https://api.chess.com/pub/player/testuser/games/2026/03',
-          ],
+          archives: ['https://api.chess.com/pub/player/testuser/games/2026/03'],
         }),
       ),
     )
@@ -180,9 +167,7 @@ describe('fetchChesscomGames', () => {
     fetchSpy.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          archives: [
-            'https://api.chess.com/pub/player/testuser/games/2026/03',
-          ],
+          archives: ['https://api.chess.com/pub/player/testuser/games/2026/03'],
         }),
       ),
     )
@@ -207,9 +192,7 @@ describe('fetchChesscomGames', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     fetchSpy.mockResolvedValueOnce(new Response(null, { status: 404 }))
 
-    await expect(fetchChesscomGames('nonexistent', 10)).rejects.toThrow(
-      /not found/i,
-    )
+    await expect(fetchChesscomGames('nonexistent', 10)).rejects.toThrow(/not found/i)
   })
 
   it('throws on 429 (rate limited)', async () => {
@@ -221,9 +204,7 @@ describe('fetchChesscomGames', () => {
       }),
     )
 
-    await expect(fetchChesscomGames('testuser', 10)).rejects.toThrow(
-      /rate limit/i,
-    )
+    await expect(fetchChesscomGames('testuser', 10)).rejects.toThrow(/rate limit/i)
   })
 
   it('extracts ECO from PGN headers', async () => {
@@ -232,15 +213,11 @@ describe('fetchChesscomGames', () => {
     fetchSpy.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          archives: [
-            'https://api.chess.com/pub/player/testuser/games/2026/03',
-          ],
+          archives: ['https://api.chess.com/pub/player/testuser/games/2026/03'],
         }),
       ),
     )
-    fetchSpy.mockResolvedValueOnce(
-      new Response(JSON.stringify({ games: [SAMPLE_GAME] })),
-    )
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ games: [SAMPLE_GAME] })))
 
     const games = await fetchChesscomGames('testuser', 1)
     expect(games[0].openingEco).toBe('B20')
@@ -249,9 +226,7 @@ describe('fetchChesscomGames', () => {
   it('returns empty array when player has no games', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
 
-    fetchSpy.mockResolvedValueOnce(
-      new Response(JSON.stringify({ archives: [] })),
-    )
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ archives: [] })))
 
     const games = await fetchChesscomGames('testuser', 10)
     expect(games).toEqual([])

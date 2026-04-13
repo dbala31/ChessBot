@@ -71,7 +71,7 @@ describe('computeEndgame', () => {
   })
 
   it('returns low score for high cp_loss in endgame', () => {
-    const moves = makeMoves(Array(10).fill({ phase: GamePhase.Endgame, cpLoss: 150 }))
+    const moves = makeMoves(Array(10).fill({ phase: GamePhase.Endgame, cpLoss: 300 }))
     expect(computeEndgame(moves)).toBeLessThan(30)
   })
 

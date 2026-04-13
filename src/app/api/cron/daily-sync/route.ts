@@ -9,10 +9,7 @@ export async function GET(request: Request) {
   // Verify cron secret to prevent unauthorized triggers
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized' },
-      { status: 401 },
-    )
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   }
 
   const supabase = createServiceClient()
@@ -39,11 +36,7 @@ export async function GET(request: Request) {
   for (const user of users ?? []) {
     if (user.chesscom_username) {
       try {
-        const result = await ingestGames(
-          user.chesscom_username,
-          'chesscom',
-          SYNC_LIMIT,
-        )
+        const result = await ingestGames(user.chesscom_username, 'chesscom', SYNC_LIMIT)
         results.push({
           userId: user.user_id,
           source: 'chesscom',
@@ -63,11 +56,7 @@ export async function GET(request: Request) {
 
     if (user.lichess_username) {
       try {
-        const result = await ingestGames(
-          user.lichess_username,
-          'lichess',
-          SYNC_LIMIT,
-        )
+        const result = await ingestGames(user.lichess_username, 'lichess', SYNC_LIMIT)
         results.push({
           userId: user.user_id,
           source: 'lichess',

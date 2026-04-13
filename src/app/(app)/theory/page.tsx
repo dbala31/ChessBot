@@ -21,16 +21,25 @@ const DIFFICULTY_COLORS: Record<string, { bg: string; text: string }> = {
 export default function TheoryPage() {
   const [activeCategory, setActiveCategory] = useState<TheoryCategory | 'all'>('all')
 
-  const filtered = activeCategory === 'all'
-    ? THEORY_TOPICS
-    : THEORY_TOPICS.filter((t) => t.category === activeCategory)
+  const filtered =
+    activeCategory === 'all'
+      ? THEORY_TOPICS
+      : THEORY_TOPICS.filter((t) => t.category === activeCategory)
 
-  const categories: Array<TheoryCategory | 'all'> = ['all', 'openings', 'endgames', 'tactics', 'strategy']
+  const categories: Array<TheoryCategory | 'all'> = [
+    'all',
+    'openings',
+    'endgames',
+    'tactics',
+    'strategy',
+  ]
 
   return (
     <div className="mx-auto max-w-4xl p-4 lg:p-6">
       <div className="mb-6">
-        <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Chess Theory</h1>
+        <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+          Chess Theory
+        </h1>
         <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
           Learn openings, endgames, tactics, and strategy fundamentals
         </p>
@@ -45,15 +54,25 @@ export default function TheoryPage() {
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className="flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150"
-              style={active
-                ? { background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid var(--accent)' }
-                : { background: 'var(--bg-primary)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }
+              style={
+                active
+                  ? {
+                      background: 'var(--accent-light)',
+                      color: 'var(--accent)',
+                      border: '1px solid var(--accent)',
+                    }
+                  : {
+                      background: 'var(--bg-primary)',
+                      color: 'var(--text-secondary)',
+                      border: '1px solid var(--border)',
+                    }
               }
             >
-              {cat !== 'all' && (() => {
-                const Icon = CATEGORY_ICONS[cat]
-                return <Icon size={12} />
-              })()}
+              {cat !== 'all' &&
+                (() => {
+                  const Icon = CATEGORY_ICONS[cat]
+                  return <Icon size={12} />
+                })()}
               {cat === 'all' ? 'All Topics' : CATEGORY_LABELS[cat]}
             </button>
           )

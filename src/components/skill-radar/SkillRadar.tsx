@@ -48,11 +48,7 @@ export function SkillRadar({ scores }: SkillRadarProps) {
             dataKey="skill"
             tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
           />
-          <PolarRadiusAxis
-            angle={30}
-            domain={[0, 100]}
-            tick={{ fill: '#94a3b8', fontSize: 9 }}
-          />
+          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#94a3b8', fontSize: 9 }} />
           <Radar
             name="Skill"
             dataKey="value"

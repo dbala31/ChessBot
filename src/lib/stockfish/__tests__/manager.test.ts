@@ -16,9 +16,7 @@ class MockWorker {
         if (msg.command === 'isready') {
           this.respond('readyok')
         } else if (msg.command.startsWith('go depth')) {
-          this.respond(
-            'info depth 18 score cp 30 pv e2e4 e7e5 g1f3',
-          )
+          this.respond('info depth 18 score cp 30 pv e2e4 e7e5 g1f3')
           this.respond('bestmove e2e4 ponder e7e5')
         }
       }, 0)
@@ -78,10 +76,7 @@ describe('StockfishManager', () => {
       }
     }
 
-    const result = await manager.analyzePosition(
-      'some-fen w - - 0 1',
-      18,
-    )
+    const result = await manager.analyzePosition('some-fen w - - 0 1', 18)
 
     expect(result.isMate).toBe(true)
     expect(result.mateIn).toBe(3)

@@ -52,8 +52,11 @@ export default function VideosPage() {
         const res = await fetch('/api/videos')
         const data = await res.json()
         if (data.success) setVideos(data.data)
-      } catch { /* empty */ }
-      finally { setLoading(false) }
+      } catch {
+        /* empty */
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [])
@@ -69,13 +72,15 @@ export default function VideosPage() {
         const reloadData = await reloadRes.json()
         if (reloadData.success) setVideos(reloadData.data)
       }
-    } catch { /* empty */ }
-    finally { setSyncing(false) }
+    } catch {
+      /* empty */
+    } finally {
+      setSyncing(false)
+    }
   }
 
-  const filtered = categoryFilter === 'all'
-    ? videos
-    : videos.filter((v) => v.categories.includes(categoryFilter))
+  const filtered =
+    categoryFilter === 'all' ? videos : videos.filter((v) => v.categories.includes(categoryFilter))
 
   // Split into "For You" (with reasons tied to scores) and "Browse"
   const forYou = videos.filter((v) => v.reason.startsWith('Recommended for'))
@@ -93,7 +98,9 @@ export default function VideosPage() {
     <div className="mx-auto max-w-5xl p-4 lg:p-6">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Videos</h1>
+          <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Videos
+          </h1>
           <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
             GothamChess videos recommended based on your skill profile
           </p>
@@ -102,7 +109,11 @@ export default function VideosPage() {
           onClick={handleSync}
           disabled={syncing}
           className="flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors duration-150"
-          style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+          style={{
+            background: 'var(--bg-tertiary)',
+            color: 'var(--text-secondary)',
+            border: '1px solid var(--border)',
+          }}
         >
           <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} />
           {syncing ? 'Syncing...' : 'Sync Videos'}
@@ -116,7 +127,8 @@ export default function VideosPage() {
             No videos yet
           </h2>
           <p className="mt-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-            Click "Sync Videos" to fetch GothamChess content, or add your YouTube API key to .env.local.
+            Click &quot;Sync Videos&quot; to fetch GothamChess content, or add your YouTube API key
+            to .env.local.
           </p>
           <button
             onClick={handleSync}
@@ -131,10 +143,16 @@ export default function VideosPage() {
 
       {/* Video player modal */}
       {activeVideo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setActiveVideo(null)}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setActiveVideo(null)}
+        >
           <div className="w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-2 flex justify-end">
-              <button onClick={() => setActiveVideo(null)} className="cursor-pointer rounded-full p-1 text-white transition-colors duration-150 hover:bg-white/20">
+              <button
+                onClick={() => setActiveVideo(null)}
+                className="cursor-pointer rounded-full p-1 text-white transition-colors duration-150 hover:bg-white/20"
+              >
                 <X size={20} />
               </button>
             </div>
@@ -182,12 +200,21 @@ export default function VideosPage() {
                   key={cat}
                   onClick={() => setCategoryFilter(cat)}
                   className="cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150"
-                  style={active
-                    ? { background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid var(--accent)' }
-                    : { background: 'var(--bg-primary)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }
+                  style={
+                    active
+                      ? {
+                          background: 'var(--accent-light)',
+                          color: 'var(--accent)',
+                          border: '1px solid var(--accent)',
+                        }
+                      : {
+                          background: 'var(--bg-primary)',
+                          color: 'var(--text-secondary)',
+                          border: '1px solid var(--border)',
+                        }
                   }
                 >
-                  {cat === 'all' ? 'All' : CATEGORY_LABELS[cat] ?? cat}
+                  {cat === 'all' ? 'All' : (CATEGORY_LABELS[cat] ?? cat)}
                 </button>
               )
             })}
@@ -206,7 +233,10 @@ export default function VideosPage() {
 
 function VideoCard({ video, onPlay }: { video: VideoItem; onPlay: (id: string) => void }) {
   return (
-    <div className="card group cursor-pointer overflow-hidden transition-all duration-150" onClick={() => onPlay(video.youtubeId)}>
+    <div
+      className="card group cursor-pointer overflow-hidden transition-all duration-150"
+      onClick={() => onPlay(video.youtubeId)}
+    >
       {/* Thumbnail */}
       <div className="relative aspect-video overflow-hidden">
         <img
@@ -220,7 +250,7 @@ function VideoCard({ video, onPlay }: { video: VideoItem; onPlay: (id: string) =
           </div>
         </div>
         {video.durationSeconds > 0 && (
-          <div className="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-[10px] font-medium text-white">
+          <div className="absolute right-2 bottom-2 rounded bg-black/80 px-1.5 py-0.5 text-[10px] font-medium text-white">
             {formatDuration(video.durationSeconds)}
           </div>
         )}
@@ -228,10 +258,16 @@ function VideoCard({ video, onPlay }: { video: VideoItem; onPlay: (id: string) =
 
       {/* Info */}
       <div className="p-3">
-        <h3 className="line-clamp-2 text-xs font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
+        <h3
+          className="line-clamp-2 text-xs leading-snug font-semibold"
+          style={{ color: 'var(--text-primary)' }}
+        >
           {video.title}
         </h3>
-        <div className="mt-1.5 flex items-center gap-2 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+        <div
+          className="mt-1.5 flex items-center gap-2 text-[10px]"
+          style={{ color: 'var(--text-muted)' }}
+        >
           <span>{video.channelName}</span>
           {video.viewCount > 0 && (
             <>

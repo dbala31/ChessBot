@@ -33,7 +33,9 @@ export default function LoginPage() {
       if (signUpError) {
         setError(signUpError.message)
       } else {
-        setMessage('Account created! Check your email to confirm, or just log in if email confirmation is disabled.')
+        setMessage(
+          'Account created! Check your email to confirm, or just log in if email confirmation is disabled.',
+        )
         setMode('login')
       }
     } else {
@@ -54,7 +56,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4" style={{ background: 'var(--bg-secondary)' }}>
+    <div
+      className="flex min-h-screen items-center justify-center p-4"
+      style={{ background: 'var(--bg-secondary)' }}
+    >
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 text-center">
@@ -80,7 +85,10 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label className="mb-1 block text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>
+              <label
+                className="mb-1 block text-[11px] font-medium"
+                style={{ color: 'var(--text-muted)' }}
+              >
                 Email
               </label>
               <input
@@ -89,13 +97,20 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="you@example.com"
-                className="w-full rounded-md px-3 py-2 text-xs outline-none transition-all duration-150 focus:ring-2"
-                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                className="w-full rounded-md px-3 py-2 text-xs transition-all duration-150 outline-none focus:ring-2"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
+                }}
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>
+              <label
+                className="mb-1 block text-[11px] font-medium"
+                style={{ color: 'var(--text-muted)' }}
+              >
                 Password
               </label>
               <input
@@ -105,17 +120,25 @@ export default function LoginPage() {
                 required
                 minLength={6}
                 placeholder="At least 6 characters"
-                className="w-full rounded-md px-3 py-2 text-xs outline-none transition-all duration-150 focus:ring-2"
-                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                className="w-full rounded-md px-3 py-2 text-xs transition-all duration-150 outline-none focus:ring-2"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
+                }}
               />
             </div>
 
             {error && (
-              <p className="text-xs" style={{ color: 'var(--danger)' }}>{error}</p>
+              <p className="text-xs" style={{ color: 'var(--danger)' }}>
+                {error}
+              </p>
             )}
 
             {message && (
-              <p className="text-xs" style={{ color: 'var(--success)' }}>{message}</p>
+              <p className="text-xs" style={{ color: 'var(--success)' }}>
+                {message}
+              </p>
             )}
 
             <button
@@ -131,11 +154,17 @@ export default function LoginPage() {
 
           <div className="mt-4 text-center">
             <button
-              onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); setMessage(null) }}
+              onClick={() => {
+                setMode(mode === 'login' ? 'signup' : 'login')
+                setError(null)
+                setMessage(null)
+              }}
               className="cursor-pointer text-xs font-medium transition-colors duration-150"
               style={{ color: 'var(--accent)' }}
             >
-              {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+              {mode === 'login'
+                ? "Don't have an account? Sign up"
+                : 'Already have an account? Sign in'}
             </button>
           </div>
         </div>

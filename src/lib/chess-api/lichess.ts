@@ -106,8 +106,7 @@ export async function fetchLichessGames(
   return rawGames
     .filter((game) => game.variant === 'standard')
     .map((game): NormalizedGame => {
-      const isWhite =
-        game.players.white.user.id.toLowerCase() === normalizedUsername
+      const isWhite = game.players.white.user.id.toLowerCase() === normalizedUsername
 
       return {
         pgn: game.pgn ?? '',

@@ -24,32 +24,91 @@ interface YouTubeVideoItem {
 // Chess topic categories based on title/description keywords
 const CATEGORY_PATTERNS: Record<string, readonly RegExp[]> = {
   openings: [
-    /opening/i, /gambit/i, /sicilian/i, /caro.?kann/i, /french defense/i,
-    /ruy lopez/i, /italian game/i, /king'?s indian/i, /queen'?s gambit/i,
-    /london system/i, /english opening/i, /dutch defense/i, /scandinavian/i,
-    /pirc/i, /nimzo/i, /grünfeld/i, /catalan/i, /berlin/i, /najdorf/i,
-    /dragon/i, /slav/i, /semi-slav/i, /petroff/i, /scotch/i,
+    /opening/i,
+    /gambit/i,
+    /sicilian/i,
+    /caro.?kann/i,
+    /french defense/i,
+    /ruy lopez/i,
+    /italian game/i,
+    /king'?s indian/i,
+    /queen'?s gambit/i,
+    /london system/i,
+    /english opening/i,
+    /dutch defense/i,
+    /scandinavian/i,
+    /pirc/i,
+    /nimzo/i,
+    /grünfeld/i,
+    /catalan/i,
+    /berlin/i,
+    /najdorf/i,
+    /dragon/i,
+    /slav/i,
+    /semi-slav/i,
+    /petroff/i,
+    /scotch/i,
   ],
   endgames: [
-    /endgame/i, /end game/i, /rook ending/i, /pawn ending/i,
-    /king and pawn/i, /bishop ending/i, /knight ending/i,
-    /opposite.?color/i, /lucena/i, /philidor/i, /tablebase/i,
+    /endgame/i,
+    /end game/i,
+    /rook ending/i,
+    /pawn ending/i,
+    /king and pawn/i,
+    /bishop ending/i,
+    /knight ending/i,
+    /opposite.?color/i,
+    /lucena/i,
+    /philidor/i,
+    /tablebase/i,
   ],
   tactics: [
-    /tactics/i, /puzzle/i, /checkmate/i, /fork/i, /pin/i, /skewer/i,
-    /discovered/i, /sacrifice/i, /combination/i, /brilliant/i,
-    /trick/i, /trap/i, /blunder/i, /mate in/i, /zwischenzug/i,
+    /tactics/i,
+    /puzzle/i,
+    /checkmate/i,
+    /fork/i,
+    /pin/i,
+    /skewer/i,
+    /discovered/i,
+    /sacrifice/i,
+    /combination/i,
+    /brilliant/i,
+    /trick/i,
+    /trap/i,
+    /blunder/i,
+    /mate in/i,
+    /zwischenzug/i,
   ],
   strategy: [
-    /strategy/i, /positional/i, /pawn structure/i, /middlegame/i,
-    /planning/i, /improve/i, /think like/i, /concept/i,
-    /principle/i, /master class/i, /lesson/i, /how to/i,
+    /strategy/i,
+    /positional/i,
+    /pawn structure/i,
+    /middlegame/i,
+    /planning/i,
+    /improve/i,
+    /think like/i,
+    /concept/i,
+    /principle/i,
+    /master class/i,
+    /lesson/i,
+    /how to/i,
   ],
   game_analysis: [
-    /game analysis/i, /review/i, /breakdown/i, /annotated/i,
-    /guess the elo/i, /subscriber game/i, /gotham.?chess/i,
-    /magnus/i, /hikaru/i, /world champion/i, /tournament/i,
-    /rapid/i, /blitz/i, /classical/i, /candidates/i,
+    /game analysis/i,
+    /review/i,
+    /breakdown/i,
+    /annotated/i,
+    /guess the elo/i,
+    /subscriber game/i,
+    /gotham.?chess/i,
+    /magnus/i,
+    /hikaru/i,
+    /world champion/i,
+    /tournament/i,
+    /rapid/i,
+    /blitz/i,
+    /classical/i,
+    /candidates/i,
   ],
 }
 
@@ -103,7 +162,7 @@ export async function fetchGothamChessVideos(maxResults: number = 50): Promise<n
     throw new Error(`YouTube API error: ${err.error?.message ?? searchRes.statusText}`)
   }
 
-  const searchData = await searchRes.json() as { items: YouTubeSearchItem[] }
+  const searchData = (await searchRes.json()) as { items: YouTubeSearchItem[] }
   const videoIds = searchData.items.map((item) => item.id.videoId)
 
   if (videoIds.length === 0) return 0
@@ -115,21 +174,15 @@ export async function fetchGothamChessVideos(maxResults: number = 50): Promise<n
   detailsUrl.searchParams.set('part', 'contentDetails,statistics,snippet')
 
   const detailsRes = await fetch(detailsUrl.toString())
-  const detailsData = await detailsRes.json() as { items: YouTubeVideoItem[] }
+  const detailsData = (await detailsRes.json()) as { items: YouTubeVideoItem[] }
 
-  const detailsMap = new Map(
-    detailsData.items.map((v) => [v.id, v]),
-  )
+  const detailsMap = new Map(detailsData.items.map((v) => [v.id, v]))
 
   // Upsert videos into catalog
   const rows = searchData.items.map((item) => {
     const details = detailsMap.get(item.id.videoId)
     const tags = details?.snippet?.tags ?? []
-    const categories = categorizeVideo(
-      item.snippet.title,
-      item.snippet.description,
-      tags,
-    )
+    const categories = categorizeVideo(item.snippet.title, item.snippet.description, tags)
 
     return {
       youtube_id: item.id.videoId,
@@ -145,9 +198,7 @@ export async function fetchGothamChessVideos(maxResults: number = 50): Promise<n
     }
   })
 
-  const { error } = await supabase
-    .from('video_catalog')
-    .upsert(rows, { onConflict: 'youtube_id' })
+  const { error } = await supabase.from('video_catalog').upsert(rows, { onConflict: 'youtube_id' })
 
   if (error) {
     throw new Error(`Failed to save videos: ${error.message}`)
@@ -186,7 +237,9 @@ export async function getRecommendedVideos(
   // Fetch all videos
   const { data: videos } = await supabase
     .from('video_catalog')
-    .select('youtube_id, title, thumbnail_url, channel_name, published_at, duration_seconds, categories, view_count')
+    .select(
+      'youtube_id, title, thumbnail_url, channel_name, published_at, duration_seconds, categories, view_count',
+    )
     .order('published_at', { ascending: false })
     .limit(200)
 
@@ -203,24 +256,25 @@ export async function getRecommendedVideos(
     const targetCategories = SKILL_TO_VIDEO_CATEGORY[score.scoreType] ?? []
     if (targetCategories.length === 0) continue
 
-    const matching = (videos as Array<{
-      youtube_id: string
-      title: string
-      thumbnail_url: string
-      channel_name: string
-      published_at: string
-      duration_seconds: number
-      categories: string[]
-      view_count: number
-    }>).filter((v) =>
-      !usedIds.has(v.youtube_id) &&
-      v.categories.some((c: string) => targetCategories.includes(c)),
+    const matching = (
+      videos as Array<{
+        youtube_id: string
+        title: string
+        thumbnail_url: string
+        channel_name: string
+        published_at: string
+        duration_seconds: number
+        categories: string[]
+        view_count: number
+      }>
+    ).filter(
+      (v) =>
+        !usedIds.has(v.youtube_id) &&
+        v.categories.some((c: string) => targetCategories.includes(c)),
     )
 
     // Pick top 3 by view count for this category
-    const topMatches = matching
-      .sort((a, b) => b.view_count - a.view_count)
-      .slice(0, 3)
+    const topMatches = matching.sort((a, b) => b.view_count - a.view_count).slice(0, 3)
 
     const skillLabel = score.scoreType.replace(/_/g, ' ')
     for (const video of topMatches) {
@@ -240,16 +294,18 @@ export async function getRecommendedVideos(
   }
 
   // Fill remaining with popular videos
-  const remaining = (videos as Array<{
-    youtube_id: string
-    title: string
-    thumbnail_url: string
-    channel_name: string
-    published_at: string
-    duration_seconds: number
-    categories: string[]
-    view_count: number
-  }>)
+  const remaining = (
+    videos as Array<{
+      youtube_id: string
+      title: string
+      thumbnail_url: string
+      channel_name: string
+      published_at: string
+      duration_seconds: number
+      categories: string[]
+      view_count: number
+    }>
+  )
     .filter((v) => !usedIds.has(v.youtube_id))
     .sort((a, b) => b.view_count - a.view_count)
     .slice(0, Math.max(0, 12 - recommendations.length))

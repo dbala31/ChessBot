@@ -23,7 +23,9 @@ export default function OnboardingPage() {
   const [step, setStep] = useState<Step>('welcome')
   const [chesscomUsername, setChesscomUsername] = useState('')
   const [lichessUsername, setLichessUsername] = useState('')
-  const [importProgress, setImportProgress] = useState<Record<GameSource, { done: boolean; count: number }>>({
+  const [importProgress, setImportProgress] = useState<
+    Record<GameSource, { done: boolean; count: number }>
+  >({
     chesscom: { done: false, count: 0 },
     lichess: { done: false, count: 0 },
   })
@@ -35,8 +37,10 @@ export default function OnboardingPage() {
   const handleImport = useCallback(async () => {
     setStep('importing')
     const sources: { source: GameSource; username: string }[] = []
-    if (chesscomUsername.trim()) sources.push({ source: 'chesscom', username: chesscomUsername.trim() })
-    if (lichessUsername.trim()) sources.push({ source: 'lichess', username: lichessUsername.trim() })
+    if (chesscomUsername.trim())
+      sources.push({ source: 'chesscom', username: chesscomUsername.trim() })
+    if (lichessUsername.trim())
+      sources.push({ source: 'lichess', username: lichessUsername.trim() })
 
     for (const { source, username } of sources) {
       try {
@@ -101,12 +105,12 @@ export default function OnboardingPage() {
               Welcome to ChessBot
             </h1>
             <p className="mb-8 text-sm" style={{ color: 'var(--text-muted)' }}>
-              Your personal chess coach. We&apos;ll analyze your games, find your weaknesses, and build
-              a training plan just for you.
+              Your personal chess coach. We&apos;ll analyze your games, find your weaknesses, and
+              build a training plan just for you.
             </p>
             <button
               onClick={() => setStep('usernames')}
-              className="flex cursor-pointer items-center gap-2 rounded-lg px-6 py-3 text-sm font-medium text-white transition-colors duration-150 mx-auto"
+              className="mx-auto flex cursor-pointer items-center gap-2 rounded-lg px-6 py-3 text-sm font-medium text-white transition-colors duration-150"
               style={{ background: 'var(--accent)' }}
             >
               Get Started <ArrowRight size={16} />
@@ -117,7 +121,10 @@ export default function OnboardingPage() {
         {/* Step 2: Enter usernames */}
         {step === 'usernames' && (
           <div>
-            <h2 className="mb-1 text-center text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h2
+              className="mb-1 text-center text-lg font-bold"
+              style={{ color: 'var(--text-primary)' }}
+            >
               Connect your accounts
             </h2>
             <p className="mb-6 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -126,7 +133,10 @@ export default function OnboardingPage() {
 
             <div className="space-y-4">
               <div className="card p-4">
-                <label className="mb-2 block text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                <label
+                  className="mb-2 block text-xs font-semibold"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   Chess.com
                 </label>
                 <input
@@ -134,7 +144,7 @@ export default function OnboardingPage() {
                   value={chesscomUsername}
                   onChange={(e) => setChesscomUsername(e.target.value)}
                   placeholder="Your Chess.com username"
-                  className="w-full rounded-md px-3 py-2.5 text-sm outline-none transition-all duration-150 focus:ring-2"
+                  className="w-full rounded-md px-3 py-2.5 text-sm transition-all duration-150 outline-none focus:ring-2"
                   style={{
                     background: 'var(--bg-secondary)',
                     border: '1px solid var(--border)',
@@ -144,7 +154,10 @@ export default function OnboardingPage() {
               </div>
 
               <div className="card p-4">
-                <label className="mb-2 block text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                <label
+                  className="mb-2 block text-xs font-semibold"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   Lichess
                 </label>
                 <input
@@ -152,7 +165,7 @@ export default function OnboardingPage() {
                   value={lichessUsername}
                   onChange={(e) => setLichessUsername(e.target.value)}
                   placeholder="Your Lichess username"
-                  className="w-full rounded-md px-3 py-2.5 text-sm outline-none transition-all duration-150 focus:ring-2"
+                  className="w-full rounded-md px-3 py-2.5 text-sm transition-all duration-150 outline-none focus:ring-2"
                   style={{
                     background: 'var(--bg-secondary)',
                     border: '1px solid var(--border)',
@@ -194,7 +207,11 @@ export default function OnboardingPage() {
                   {importProgress.chesscom.done ? (
                     <Check size={16} style={{ color: 'var(--success)' }} />
                   ) : (
-                    <Loader2 size={16} className="animate-spin" style={{ color: 'var(--accent)' }} />
+                    <Loader2
+                      size={16}
+                      className="animate-spin"
+                      style={{ color: 'var(--accent)' }}
+                    />
                   )}
                   <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
                     Chess.com
@@ -207,7 +224,11 @@ export default function OnboardingPage() {
                   {importProgress.lichess.done ? (
                     <Check size={16} style={{ color: 'var(--success)' }} />
                   ) : (
-                    <Loader2 size={16} className="animate-spin" style={{ color: 'var(--accent)' }} />
+                    <Loader2
+                      size={16}
+                      className="animate-spin"
+                      style={{ color: 'var(--accent)' }}
+                    />
                   )}
                   <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
                     Lichess
@@ -222,11 +243,7 @@ export default function OnboardingPage() {
         {/* Step 4: Analyzing */}
         {step === 'analyzing' && (
           <div className="text-center">
-            <Sparkles
-              size={40}
-              className="mx-auto mb-4"
-              style={{ color: 'var(--accent)' }}
-            />
+            <Sparkles size={40} className="mx-auto mb-4" style={{ color: 'var(--accent)' }} />
             <h2 className="mb-2 text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
               Analyzing your games...
             </h2>

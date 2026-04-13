@@ -17,10 +17,7 @@ export async function POST() {
   await supabase.from('skill_scores').delete().eq('user_id', userId)
 
   // 4. puzzles from user's games (references games via source_game_id)
-  const { data: gameIds } = await supabase
-    .from('games')
-    .select('id')
-    .eq('user_id', userId)
+  const { data: gameIds } = await supabase.from('games').select('id').eq('user_id', userId)
 
   if (gameIds && gameIds.length > 0) {
     const ids = gameIds.map((g: { id: string }) => g.id)

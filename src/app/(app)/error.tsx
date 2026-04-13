@@ -26,7 +26,7 @@ export default function AppError({ error, reset }: ErrorProps) {
         </p>
         <button
           onClick={reset}
-          className="flex cursor-pointer items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-white transition-colors duration-150 mx-auto"
+          className="mx-auto flex cursor-pointer items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-white transition-colors duration-150"
           style={{ background: 'var(--accent)' }}
         >
           <RotateCcw size={14} />
