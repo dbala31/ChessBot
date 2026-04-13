@@ -1,8 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import type { GameSource } from '@/types'
-import { Upload, FlaskConical } from 'lucide-react'
+import { Upload, Loader2 } from 'lucide-react'
+
+const AnalysisSection = dynamic(
+  () => import('@/components/analysis/AnalysisSection').then((m) => m.AnalysisSection),
+  { ssr: false, loading: () => <div className="card p-5 text-xs" style={{ color: 'var(--text-muted)' }}>Loading analysis engine...</div> },
+)
 
 interface ImportStatus {
   readonly loading: boolean
@@ -18,11 +24,41 @@ export default function SettingsPage() {
     lichess: { loading: false, result: null, error: null },
   })
 
+  // Load saved usernames
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch('/api/settings')
+        const data = await res.json()
+        if (data.success && data.data) {
+          if (data.data.chesscom_username) setChesscomUsername(data.data.chesscom_username)
+          if (data.data.lichess_username) setLichessUsername(data.data.lichess_username)
+        }
+      } catch {
+        // ignore
+      }
+    }
+    load()
+  }, [])
+
+  const saveUsernames = useCallback(async (chesscom: string, lichess: string) => {
+    await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chesscomUsername: chesscom || null,
+        lichessUsername: lichess || null,
+      }),
+    })
+  }, [])
+
   async function handleImport(source: GameSource) {
     const username = source === 'chesscom' ? chesscomUsername : lichessUsername
     if (!username.trim()) return
 
     setImportStatus((prev) => ({ ...prev, [source]: { loading: true, result: null, error: null } }))
+
+    await saveUsernames(chesscomUsername, lichessUsername)
 
     try {
       const res = await fetch('/api/games/import', {
@@ -72,7 +108,11 @@ export default function SettingsPage() {
                   className="flex cursor-pointer items-center gap-1.5 rounded-md px-4 py-2 text-xs font-medium text-white transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40"
                   style={{ background: 'var(--accent)' }}
                 >
-                  <Upload size={13} />
+                  {status.loading ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <Upload size={13} />
+                  )}
                   {status.loading ? 'Importing...' : 'Import'}
                 </button>
               </div>
@@ -88,13 +128,7 @@ export default function SettingsPage() {
           )
         })}
 
-        <div className="card p-5">
-          <h2 className="mb-2 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Analysis</h2>
-          <p className="mb-3 text-xs" style={{ color: 'var(--text-muted)' }}>Run Stockfish on all unanalyzed games</p>
-          <button className="flex cursor-pointer items-center gap-1.5 rounded-md px-4 py-2 text-xs font-medium text-white transition-colors duration-150" style={{ background: 'var(--accent)' }}>
-            <FlaskConical size={13} /> Analyze All Games
-          </button>
-        </div>
+        <AnalysisSection />
       </div>
     </div>
   )

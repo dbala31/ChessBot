@@ -3,6 +3,7 @@ import { fetchChesscomGames } from './chesscom'
 import type { NormalizedGame } from './chesscom'
 import { fetchLichessGames } from './lichess'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getUserId } from '@/lib/auth/user'
 
 export interface IngestResult {
   readonly imported: number
@@ -13,6 +14,7 @@ export async function ingestGames(
   username: string,
   source: GameSource,
   limit: number,
+  userId?: string,
 ): Promise<IngestResult> {
   const games: readonly NormalizedGame[] =
     source === 'chesscom'
@@ -34,9 +36,7 @@ export async function ingestGames(
     .in('source_game_id', sourceGameIds)
 
   const existingIds = new Set(
-    (existing ?? []).map(
-      (row: { source_game_id: string }) => row.source_game_id,
-    ),
+    (existing ?? []).map((row: { source_game_id: string }) => row.source_game_id),
   )
 
   const newGames = games.filter((g) => !existingIds.has(g.sourceGameId))
@@ -45,7 +45,10 @@ export async function ingestGames(
     return { imported: 0, total: games.length }
   }
 
+  const resolvedUserId = userId ?? getUserId()
+
   const rows = newGames.map((game) => ({
+    user_id: resolvedUserId,
     pgn: game.pgn,
     source: game.source,
     source_game_id: game.sourceGameId,

@@ -1,18 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { buildDrillQueue } from '@/lib/drills/queue'
+import { getUserId } from '@/lib/auth/user'
 import type { LessonType, ScoreType } from '@/types'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const userId = searchParams.get('userId')
-
-  if (!userId) {
-    return NextResponse.json(
-      { success: false, error: 'userId query parameter is required' },
-      { status: 400 },
-    )
-  }
+  const userId = searchParams.get('userId') ?? getUserId()
 
   const supabase = createServiceClient()
 
@@ -22,8 +16,10 @@ export async function GET(request: Request) {
     .select('score_type, value')
     .eq('user_id', userId)
 
-  // Get available puzzles
-  const { data: puzzles } = await supabase.from('puzzles').select('id, lesson_type, difficulty')
+  // Get available puzzles (full data for training page)
+  const { data: puzzles } = await supabase
+    .from('puzzles')
+    .select('id, fen, solution_pv, lesson_type, difficulty, theme_tags, source')
 
   // Get recently attempted puzzle IDs (last 3 days)
   const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
@@ -39,10 +35,14 @@ export async function GET(request: Request) {
   }))
 
   const mappedPuzzles = (puzzles ?? []).map(
-    (p: { id: string; lesson_type: string; difficulty: number }) => ({
+    (p: { id: string; fen: string; solution_pv: string; lesson_type: string; difficulty: number; theme_tags: string[]; source: string }) => ({
       id: p.id,
+      fen: p.fen,
+      solutionPv: p.solution_pv,
       lessonType: p.lesson_type as LessonType,
       difficulty: p.difficulty,
+      themeTags: p.theme_tags,
+      source: p.source,
     }),
   )
 

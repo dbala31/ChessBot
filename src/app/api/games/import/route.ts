@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { ingestGames } from '@/lib/chess-api/ingest'
 import type { GameSource } from '@/types'
+import { getUserId } from '@/lib/auth/user'
 
 interface ImportRequestBody {
   readonly username: unknown
@@ -17,19 +18,13 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as ImportRequestBody
   } catch {
-    return NextResponse.json(
-      { success: false, error: 'Invalid JSON body' },
-      { status: 400 },
-    )
+    return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 })
   }
 
   const { username, source, limit: rawLimit } = body
 
   if (typeof username !== 'string' || username.trim().length === 0) {
-    return NextResponse.json(
-      { success: false, error: 'username is required' },
-      { status: 400 },
-    )
+    return NextResponse.json({ success: false, error: 'username is required' }, { status: 400 })
   }
 
   if (!VALID_SOURCES.includes(source as GameSource)) {
@@ -40,34 +35,21 @@ export async function POST(request: Request) {
   }
 
   const limit =
-    typeof rawLimit === 'number' && rawLimit > 0
-      ? Math.min(rawLimit, MAX_LIMIT)
-      : DEFAULT_LIMIT
+    typeof rawLimit === 'number' && rawLimit > 0 ? Math.min(rawLimit, MAX_LIMIT) : DEFAULT_LIMIT
 
   try {
-    const result = await ingestGames(
-      username.trim(),
-      source as GameSource,
-      limit,
-    )
+    const userId = getUserId()
+    const result = await ingestGames(username.trim(), source as GameSource, limit, userId)
 
     return NextResponse.json({
       success: true,
       data: { imported: result.imported, total: result.total },
     })
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : 'Import failed'
+    const message = error instanceof Error ? error.message : 'Import failed'
 
-    const status = message.includes('not found')
-      ? 404
-      : message.includes('rate limit')
-        ? 429
-        : 500
+    const status = message.includes('not found') ? 404 : message.includes('rate limit') ? 429 : 500
 
-    return NextResponse.json(
-      { success: false, error: message },
-      { status },
-    )
+    return NextResponse.json({ success: false, error: message }, { status })
   }
 }

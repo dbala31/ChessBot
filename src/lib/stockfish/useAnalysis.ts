@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { StockfishManager } from './manager'
-import { saveAnalysis } from '@/lib/analysis/persist'
 import { saveCheckpoint, clearCheckpoint, getIncompleteGames } from './analysisStore'
 import type { AnalysisProgress } from '@/types'
 
@@ -71,7 +70,16 @@ export function useAnalysis() {
 
       if (cancelledRef.current) return false
 
-      await saveAnalysis(game.id, moves)
+      // Save via API route (server-side persist + drill generation)
+      const res = await fetch('/api/analysis/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameId: game.id, moves }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error ?? 'Failed to save analysis')
+      }
       await clearCheckpoint(game.id)
       return true
     } catch (err: unknown) {

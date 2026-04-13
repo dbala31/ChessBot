@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { Board } from '@/components/board/Board'
 import { EvalBar } from '@/components/eval-bar/EvalBar'
 import { EvalGraph } from '@/components/eval-graph/EvalGraph'
 import { MoveList } from '@/components/move-list/MoveList'
-import { MoveClassification } from '@/types'
+import { MoveClassification, GamePhase } from '@/types'
 import { Chess } from 'chess.js'
 import type { Key } from 'chessground/types'
 import {
@@ -17,117 +18,114 @@ import {
   Target,
   Loader2,
   X as XIcon,
+  AlertCircle,
 } from 'lucide-react'
 import type { ExplainMoveRequest } from '@/types'
-import { GamePhase } from '@/types'
 
-// Mock data for design — Italian Game (shortened)
-const MOCK_PGN =
-  '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. d3 Nf6 5. Nc3 d6 6. Be3 Bb6 7. O-O O-O 8. a3 Be6 9. Bxe6 fxe6 10. b4 d5 11. exd5 exd5 12. Ng5 Qd7 13. d4 exd4 14. Bxd4 Bxd4 15. Qxd4 h6 16. Nf3 Rae8 17. Rfe1 Ne4 18. Nxe4 dxe4 19. Nd2 Qf5 20. Nxe4 Nd4 0-1'
+interface AnalyzedMoveData {
+  readonly ply: number
+  readonly fenBefore: string
+  readonly playedMove: string
+  readonly bestMove: string
+  readonly evalBefore: number
+  readonly evalAfter: number
+  readonly cpLoss: number
+  readonly classification: string
+  readonly phase: string
+}
 
-const MOCK_MOVES = (() => {
-  const chess = new Chess()
-  chess.loadPgn(MOCK_PGN)
-  const moves = chess.history({ verbose: true })
-
-  // Generate mock analysis data
-  const classifications = [
-    MoveClassification.Best,
-    MoveClassification.Good,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Good,
-    MoveClassification.Best,
-    MoveClassification.Inaccuracy,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Good,
-    MoveClassification.Best,
-    MoveClassification.Mistake,
-    MoveClassification.Best,
-    MoveClassification.Good,
-    MoveClassification.Best,
-    MoveClassification.Blunder,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Good,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Good,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Good,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Good,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Good,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Mistake,
-    MoveClassification.Best,
-    MoveClassification.Best,
-    MoveClassification.Best,
-  ]
-
-  return moves.map((m, i) => ({
-    ply: i + 1,
-    san: m.san,
-    from: m.from as Key,
-    to: m.to as Key,
-    classification: classifications[i % classifications.length],
-    cpLoss:
-      classifications[i % classifications.length] === MoveClassification.Blunder
-        ? 250
-        : classifications[i % classifications.length] === MoveClassification.Mistake
-          ? 120
-          : classifications[i % classifications.length] === MoveClassification.Inaccuracy
-            ? 50
-            : 5,
-  }))
-})()
-
-// Generate eval curve (simulating a game where black wins)
-const MOCK_EVAL_DATA = MOCK_MOVES.map((_, i) => ({
-  ply: i + 1,
-  eval: Math.round(30 - i * 8 + Math.sin(i * 0.5) * 40 + (i > 30 ? -100 : 0)),
-  classification: MOCK_MOVES[i]?.classification,
-}))
+interface GameData {
+  readonly id: string
+  readonly pgn: string
+  readonly source: string
+  readonly result: string
+  readonly userColor: string
+  readonly timeControl: string
+  readonly opponent: string
+  readonly analysisComplete: boolean
+  readonly moves: readonly AnalyzedMoveData[]
+}
 
 export default function GameReviewPage() {
+  const params = useParams()
+  const gameId = params.id as string
+
+  const [gameData, setGameData] = useState<GameData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [currentPly, setCurrentPly] = useState(0)
   const [explanation, setExplanation] = useState<string | null>(null)
   const [isExplaining, setIsExplaining] = useState(false)
   const [explainPly, setExplainPly] = useState<number | null>(null)
 
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch(`/api/games/${gameId}`)
+        const data = await res.json()
+        if (data.success) {
+          setGameData(data.data)
+        } else {
+          setError(data.error ?? 'Failed to load game')
+        }
+      } catch {
+        setError('Network error')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [gameId])
+
+  // Parse PGN moves
+  const pgnMoves = (() => {
+    if (!gameData?.pgn) return []
+    try {
+      const chess = new Chess()
+      chess.loadPgn(gameData.pgn)
+      return chess.history({ verbose: true })
+    } catch {
+      return []
+    }
+  })()
+
+  // Build move list with analysis data
+  const moveList = pgnMoves.map((m, i) => {
+    const analysisMove = gameData?.moves.find((am) => am.ply === i + 1)
+    return {
+      ply: i + 1,
+      san: m.san,
+      from: m.from as Key,
+      to: m.to as Key,
+      classification: analysisMove
+        ? (analysisMove.classification as MoveClassification)
+        : undefined,
+      cpLoss: analysisMove?.cpLoss ?? 0,
+    }
+  })
+
+  // Build eval data from analysis
+  const evalData = gameData?.moves.map((m) => ({
+    ply: m.ply,
+    eval: Math.round(m.evalBefore),
+    classification: m.classification as MoveClassification,
+  })) ?? []
+
   const handleExplain = useCallback(async (ply: number) => {
-    const move = MOCK_MOVES[ply - 1]
-    if (!move) return
+    const move = moveList[ply - 1]
+    const analysisMove = gameData?.moves.find((am) => am.ply === ply)
+    if (!move || !analysisMove) return
 
     setIsExplaining(true)
     setExplainPly(ply)
     setExplanation(null)
 
-    const replayForFen = new Chess()
-    replayForFen.loadPgn(MOCK_PGN)
-    const movesForFen = replayForFen.history({ verbose: true })
-    const posChess = new Chess()
-    for (let i = 0; i < ply - 1 && i < movesForFen.length; i++) {
-      posChess.move(movesForFen[i].san)
-    }
-
     const req: ExplainMoveRequest = {
-      fen: posChess.fen(),
+      fen: analysisMove.fenBefore,
       playedMove: move.san,
-      bestMove: move.san, // In real implementation, comes from analysis
-      cpLoss: move.cpLoss,
-      phase: GamePhase.Middlegame,
+      bestMove: analysisMove.bestMove,
+      cpLoss: analysisMove.cpLoss,
+      phase: analysisMove.phase as GamePhase,
     }
 
     try {
@@ -143,31 +141,26 @@ export default function GameReviewPage() {
     } finally {
       setIsExplaining(false)
     }
-  }, [])
+  }, [moveList, gameData?.moves])
 
   // Compute FEN at current ply
-  const chess = new Chess()
-  chess.loadPgn(MOCK_PGN)
-  const allMoves = chess.history({ verbose: true })
-
   const replay = new Chess()
-  for (let i = 0; i < currentPly && i < allMoves.length; i++) {
-    replay.move(allMoves[i].san)
+  for (let i = 0; i < currentPly && i < pgnMoves.length; i++) {
+    replay.move(pgnMoves[i].san)
   }
-
   const currentFen = replay.fen()
   const lastMove =
-    currentPly > 0 && currentPly <= allMoves.length
-      ? ([allMoves[currentPly - 1].from, allMoves[currentPly - 1].to] as const)
+    currentPly > 0 && currentPly <= pgnMoves.length
+      ? ([pgnMoves[currentPly - 1].from, pgnMoves[currentPly - 1].to] as const)
       : undefined
 
-  const currentEval = MOCK_EVAL_DATA[currentPly - 1]?.eval ?? 30
+  const currentEval = evalData.find((e) => e.ply === currentPly)?.eval ?? 30
 
   const goTo = useCallback(
     (ply: number) => {
-      setCurrentPly(Math.max(0, Math.min(ply, allMoves.length)))
+      setCurrentPly(Math.max(0, Math.min(ply, pgnMoves.length)))
     },
-    [allMoves.length],
+    [pgnMoves.length],
   )
 
   // Keyboard navigation
@@ -178,26 +171,46 @@ export default function GameReviewPage() {
         setCurrentPly((p) => Math.max(0, p - 1))
       } else if (e.key === 'ArrowRight') {
         e.preventDefault()
-        setCurrentPly((p) => Math.min(allMoves.length, p + 1))
+        setCurrentPly((p) => Math.min(pgnMoves.length, p + 1))
       } else if (e.key === 'Home') {
         e.preventDefault()
         setCurrentPly(0)
       } else if (e.key === 'End') {
         e.preventDefault()
-        setCurrentPly(allMoves.length)
+        setCurrentPly(pgnMoves.length)
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [allMoves.length])
+  }, [pgnMoves.length])
+
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="animate-spin" size={24} style={{ color: 'var(--accent)' }} />
+        <span className="ml-2 text-sm" style={{ color: 'var(--text-muted)' }}>Loading game...</span>
+      </div>
+    )
+  }
+
+  if (error || !gameData) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <AlertCircle size={20} style={{ color: 'var(--danger)' }} />
+        <span className="ml-2 text-sm" style={{ color: 'var(--danger)' }}>{error ?? 'Game not found'}</span>
+      </div>
+    )
+  }
 
   const navButtons = [
     { key: 'start', icon: SkipBack, action: () => goTo(0) },
     { key: 'prev', icon: ChevronLeft, action: () => goTo(currentPly - 1) },
     { key: 'next', icon: ChevronRight, action: () => goTo(currentPly + 1) },
-    { key: 'end', icon: SkipForward, action: () => goTo(allMoves.length) },
+    { key: 'end', icon: SkipForward, action: () => goTo(pgnMoves.length) },
   ]
+
+  const currentMoveClassification = moveList[currentPly - 1]?.classification
 
   return (
     <div className="flex h-full flex-col p-3 md:p-4 lg:p-6">
@@ -207,7 +220,7 @@ export default function GameReviewPage() {
           <div className="w-full max-w-[480px] flex-shrink-0 md:w-[400px] lg:w-[480px]">
             <Board
               fen={currentFen}
-              orientation="white"
+              orientation={gameData.userColor === 'black' ? 'black' : 'white'}
               lastMove={lastMove as readonly [Key, Key] | undefined}
             />
           </div>
@@ -216,14 +229,22 @@ export default function GameReviewPage() {
         <div className="flex flex-1 flex-col gap-3 overflow-hidden">
           <div className="card flex items-center gap-3 px-4 py-2.5 text-xs">
             <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-              You vs MagnusFan99
+              You vs {gameData.opponent}
             </span>
-            <span className="font-mono font-bold" style={{ color: 'var(--danger)' }}>
-              0-1
+            <span className="font-mono font-bold" style={{
+              color: gameData.result === '1-0' ? 'var(--success)' : gameData.result === '0-1' ? 'var(--danger)' : 'var(--warning)',
+            }}>
+              {gameData.result}
             </span>
-            <span style={{ color: 'var(--text-muted)' }}>Lichess</span>
-            <span style={{ color: 'var(--text-muted)' }}>5+0 Blitz</span>
+            <span style={{ color: 'var(--text-muted)' }}>{gameData.source === 'lichess' ? 'Lichess' : 'Chess.com'}</span>
+            <span style={{ color: 'var(--text-muted)' }}>{gameData.timeControl}</span>
           </div>
+
+          {!gameData.analysisComplete && (
+            <div className="rounded-lg px-4 py-2.5 text-xs" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}>
+              Game not yet analyzed. Go to Settings to run Stockfish analysis.
+            </div>
+          )}
 
           <div className="flex gap-1">
             {navButtons.map((btn) => (
@@ -239,13 +260,12 @@ export default function GameReviewPage() {
           </div>
 
           <div className="flex-1 overflow-hidden">
-            <MoveList moves={MOCK_MOVES} currentPly={currentPly} onClickPly={goTo} />
+            <MoveList moves={moveList} currentPly={currentPly} onClickPly={goTo} />
           </div>
 
-          {currentPly > 0 &&
-            MOCK_MOVES[currentPly - 1]?.classification &&
-            (MOCK_MOVES[currentPly - 1].classification === MoveClassification.Mistake ||
-              MOCK_MOVES[currentPly - 1].classification === MoveClassification.Blunder) && (
+          {currentPly > 0 && currentMoveClassification &&
+            (currentMoveClassification === MoveClassification.Mistake ||
+              currentMoveClassification === MoveClassification.Blunder) && (
               <div className="flex gap-2">
                 <button
                   onClick={() => handleExplain(currentPly)}
@@ -305,9 +325,11 @@ export default function GameReviewPage() {
         </div>
       </div>
 
-      <div className="card mt-4 p-4">
-        <EvalGraph data={MOCK_EVAL_DATA} currentPly={currentPly} onClickPly={goTo} />
-      </div>
+      {evalData.length > 0 && (
+        <div className="card mt-4 p-4">
+          <EvalGraph data={evalData} currentPly={currentPly} onClickPly={goTo} />
+        </div>
+      )}
     </div>
   )
 }
