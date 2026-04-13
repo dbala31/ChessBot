@@ -3,14 +3,7 @@
 import { SkillRadar } from '@/components/skill-radar/SkillRadar'
 import { ScoreType } from '@/types'
 import Link from 'next/link'
-import {
-  TrendingUp,
-  Flame,
-  Target,
-  ArrowRight,
-  AlertTriangle,
-  BarChart3,
-} from 'lucide-react'
+import { TrendingUp, Flame, Target, ArrowRight, AlertTriangle, BarChart3 } from 'lucide-react'
 
 const MOCK_SCORES = [
   { scoreType: ScoreType.Tactics, value: 72 },
@@ -22,11 +15,56 @@ const MOCK_SCORES = [
 ]
 
 const MOCK_GAMES = [
-  { id: '1', opponent: 'MagnusFan99', result: '1-0', timeControl: '5+0', source: 'lichess' as const, playedAt: '2026-04-12T10:30:00Z', accuracy: 91, blunders: 0 },
-  { id: '2', opponent: 'ChessMaster2000', result: '0-1', timeControl: '3+0', source: 'chesscom' as const, playedAt: '2026-04-12T09:15:00Z', accuracy: 74, blunders: 2 },
-  { id: '3', opponent: 'QuietPawn', result: '1/2-1/2', timeControl: '10+0', source: 'lichess' as const, playedAt: '2026-04-11T20:00:00Z', accuracy: 85, blunders: 1 },
-  { id: '4', opponent: 'TacticalKnight', result: '1-0', timeControl: '5+3', source: 'chesscom' as const, playedAt: '2026-04-11T18:30:00Z', accuracy: 88, blunders: 0 },
-  { id: '5', opponent: 'EndgameWizard', result: '0-1', timeControl: '15+10', source: 'lichess' as const, playedAt: '2026-04-11T15:00:00Z', accuracy: 69, blunders: 3 },
+  {
+    id: '1',
+    opponent: 'MagnusFan99',
+    result: '1-0',
+    timeControl: '5+0',
+    source: 'lichess' as const,
+    playedAt: '2026-04-12T10:30:00Z',
+    accuracy: 91,
+    blunders: 0,
+  },
+  {
+    id: '2',
+    opponent: 'ChessMaster2000',
+    result: '0-1',
+    timeControl: '3+0',
+    source: 'chesscom' as const,
+    playedAt: '2026-04-12T09:15:00Z',
+    accuracy: 74,
+    blunders: 2,
+  },
+  {
+    id: '3',
+    opponent: 'QuietPawn',
+    result: '1/2-1/2',
+    timeControl: '10+0',
+    source: 'lichess' as const,
+    playedAt: '2026-04-11T20:00:00Z',
+    accuracy: 85,
+    blunders: 1,
+  },
+  {
+    id: '4',
+    opponent: 'TacticalKnight',
+    result: '1-0',
+    timeControl: '5+3',
+    source: 'chesscom' as const,
+    playedAt: '2026-04-11T18:30:00Z',
+    accuracy: 88,
+    blunders: 0,
+  },
+  {
+    id: '5',
+    opponent: 'EndgameWizard',
+    result: '0-1',
+    timeControl: '15+10',
+    source: 'lichess' as const,
+    playedAt: '2026-04-11T15:00:00Z',
+    accuracy: 69,
+    blunders: 3,
+  },
 ]
 
 const SKILL_LABELS: Record<ScoreType, string> = {
@@ -49,7 +87,7 @@ export default function DashboardPage() {
   return (
     <div className="p-4 lg:p-6">
       {/* Stats */}
-      <div className="mb-6 grid grid-cols-3 gap-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
           { label: 'Games Analyzed', value: '142', icon: BarChart3, change: '+12 this week' },
           { label: 'Training Streak', value: '7 days', icon: Flame, change: 'Personal best' },
@@ -105,7 +143,10 @@ export default function DashboardPage() {
           >
             <div className="mb-2 flex items-center gap-2">
               <AlertTriangle size={14} style={{ color: 'var(--danger)' }} />
-              <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--danger)' }}>
+              <span
+                className="text-[11px] font-semibold tracking-wider uppercase"
+                style={{ color: 'var(--danger)' }}
+              >
                 Weakest area
               </span>
             </div>
@@ -149,8 +190,14 @@ export default function DashboardPage() {
                     {SKILL_LABELS[score.scoreType]}
                   </span>
                   <div className="flex items-center gap-3">
-                    <div className="h-1.5 w-20 overflow-hidden rounded-full" style={{ background: 'var(--bg-tertiary)' }}>
-                      <div className="h-full rounded-full" style={{ width: `${score.value}%`, background: color }} />
+                    <div
+                      className="h-1.5 w-20 overflow-hidden rounded-full"
+                      style={{ background: 'var(--bg-tertiary)' }}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${score.value}%`, background: color }}
+                      />
                     </div>
                     <span className="w-8 text-right text-xs font-semibold" style={{ color }}>
                       {score.value}
@@ -163,8 +210,11 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Games */}
-        <div className="card overflow-hidden lg:col-span-3">
-          <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div className="card overflow-x-auto lg:col-span-3">
+          <div
+            className="flex items-center justify-between px-5 py-4"
+            style={{ borderBottom: '1px solid var(--border)' }}
+          >
             <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
               Recent Games
             </h2>
@@ -198,14 +248,39 @@ export default function DashboardPage() {
                   <td className="px-5 py-2.5 font-medium" style={{ color: 'var(--accent)' }}>
                     <Link href={`/games/${game.id}`}>{game.opponent}</Link>
                   </td>
-                  <td className="px-5 py-2.5 font-mono font-semibold" style={{ color: game.result === '1-0' ? 'var(--success)' : game.result === '0-1' ? 'var(--danger)' : 'var(--warning)' }}>
+                  <td
+                    className="px-5 py-2.5 font-mono font-semibold"
+                    style={{
+                      color:
+                        game.result === '1-0'
+                          ? 'var(--success)'
+                          : game.result === '0-1'
+                            ? 'var(--danger)'
+                            : 'var(--warning)',
+                    }}
+                  >
                     {game.result}
                   </td>
-                  <td className="px-5 py-2.5" style={{ color: 'var(--text-secondary)' }}>{game.timeControl}</td>
-                  <td className="px-5 py-2.5 font-medium" style={{ color: game.accuracy >= 85 ? 'var(--success)' : game.accuracy >= 70 ? 'var(--warning)' : 'var(--danger)' }}>
+                  <td className="px-5 py-2.5" style={{ color: 'var(--text-secondary)' }}>
+                    {game.timeControl}
+                  </td>
+                  <td
+                    className="px-5 py-2.5 font-medium"
+                    style={{
+                      color:
+                        game.accuracy >= 85
+                          ? 'var(--success)'
+                          : game.accuracy >= 70
+                            ? 'var(--warning)'
+                            : 'var(--danger)',
+                    }}
+                  >
                     {game.accuracy}%
                   </td>
-                  <td className="px-5 py-2.5" style={{ color: game.blunders === 0 ? 'var(--success)' : 'var(--danger)' }}>
+                  <td
+                    className="px-5 py-2.5"
+                    style={{ color: game.blunders === 0 ? 'var(--success)' : 'var(--danger)' }}
+                  >
                     {game.blunders}
                   </td>
                   <td className="px-5 py-2.5" style={{ color: 'var(--text-muted)' }}>

@@ -62,7 +62,7 @@ export async function explainMove(req: ExplainMoveRequest): Promise<string> {
   const cached = await getCached(key)
   if (cached) return cached
 
-  const model = getGenAI().getGenerativeModel({ model: 'gemini-2.0-flash' })
+  const model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' })
   const result = await model.generateContent(buildPrompt(req))
   const explanation = result.response.text()
 

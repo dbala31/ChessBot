@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { StockfishManager } from './manager'
 import { saveAnalysis } from '@/lib/analysis/persist'
+import { saveCheckpoint, clearCheckpoint, getIncompleteGames } from './analysisStore'
 import type { AnalysisProgress } from '@/types'
 
 interface AnalysisState {
@@ -36,56 +37,52 @@ export function useAnalysis() {
 
   function getOrCreateManager(): StockfishManager {
     if (!managerRef.current) {
-      const worker = new Worker(
-        new URL('@/workers/stockfish.worker.ts', import.meta.url),
-        { type: 'module' },
-      )
+      const worker = new Worker(new URL('@/workers/stockfish.worker.ts', import.meta.url), {
+        type: 'module',
+      })
       managerRef.current = new StockfishManager(worker)
     }
     return managerRef.current
   }
 
-  const analyzeGame = useCallback(
-    async (game: GameToAnalyze): Promise<boolean> => {
-      const manager = getOrCreateManager()
+  const analyzeGame = useCallback(async (game: GameToAnalyze): Promise<boolean> => {
+    const manager = getOrCreateManager()
 
+    setState((prev) => ({
+      ...prev,
+      isAnalyzing: true,
+      error: null,
+    }))
+
+    try {
+      const moves = await manager.analyzeGame(game.pgn, (progress) => {
+        if (cancelledRef.current) return
+        const updated = { ...progress, currentGameId: game.id }
+        setState((prev) => ({ ...prev, progress: updated }))
+
+        // Persist checkpoint so analysis can resume after tab close
+        saveCheckpoint({
+          gameId: game.id,
+          completedPlies: progress.currentPly,
+          totalPlies: progress.totalPlies,
+          timestamp: Date.now(),
+        }).catch(() => {})
+      })
+
+      if (cancelledRef.current) return false
+
+      await saveAnalysis(game.id, moves)
+      await clearCheckpoint(game.id)
+      return true
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Analysis failed'
       setState((prev) => ({
         ...prev,
-        isAnalyzing: true,
-        error: null,
+        error: message,
       }))
-
-      try {
-        const moves = await manager.analyzeGame(
-          game.pgn,
-          (progress) => {
-            if (cancelledRef.current) return
-            setState((prev) => ({
-              ...prev,
-              progress: {
-                ...progress,
-                currentGameId: game.id,
-              },
-            }))
-          },
-        )
-
-        if (cancelledRef.current) return false
-
-        await saveAnalysis(game.id, moves)
-        return true
-      } catch (err: unknown) {
-        const message =
-          err instanceof Error ? err.message : 'Analysis failed'
-        setState((prev) => ({
-          ...prev,
-          error: message,
-        }))
-        return false
-      }
-    },
-    [],
-  )
+      return false
+    }
+  }, [])
 
   const analyzeBatch = useCallback(
     async (games: readonly GameToAnalyze[]): Promise<number> => {
@@ -133,6 +130,7 @@ export function useAnalysis() {
     analyzeGame,
     analyzeBatch,
     cancel,
+    getIncompleteGames,
     isAnalyzing: state.isAnalyzing,
     progress: state.progress,
     error: state.error,
