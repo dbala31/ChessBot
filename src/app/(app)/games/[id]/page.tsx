@@ -200,11 +200,11 @@ export default function GameReviewPage() {
   ]
 
   return (
-    <div className="flex h-full flex-col p-4 lg:p-6">
-      <div className="flex flex-1 gap-4 overflow-hidden">
+    <div className="flex h-full flex-col p-3 md:p-4 lg:p-6">
+      <div className="flex flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
         <div className="flex gap-2">
           <EvalBar eval={currentEval} />
-          <div className="w-[400px] flex-shrink-0 lg:w-[480px]">
+          <div className="w-full max-w-[480px] flex-shrink-0 md:w-[400px] lg:w-[480px]">
             <Board
               fen={currentFen}
               orientation="white"
