@@ -1,6 +1,6 @@
 import type { StockfishResult, AnalysisProgress } from '@/types'
 import { Chess } from 'chess.js'
-import { classifyMove, determinePhase } from '@/lib/analysis/classify'
+import { classifyMoveDetailed, determinePhase } from '@/lib/analysis/classify'
 import type { MoveClassification, GamePhase } from '@/types'
 
 const DEFAULT_DEPTH = 18
@@ -225,6 +225,8 @@ export class StockfishManager {
 
       const cpLoss = Math.max(0, evalBeforeCp - evalAfterCp)
 
+      const phase = determinePhase(fenBefore, ply)
+
       results.push({
         ply,
         fenBefore,
@@ -233,8 +235,17 @@ export class StockfishManager {
         evalBefore: evalBeforeCp,
         evalAfter: evalAfterCp,
         cpLoss,
-        classification: classifyMove(cpLoss),
-        phase: determinePhase(fenBefore, ply),
+        classification: classifyMoveDetailed({
+          cpLoss,
+          playedMove: moves[i].lan,
+          bestMove: evalBefore.bestMove,
+          evalBefore: evalBeforeCp,
+          evalAfter: evalAfterCp,
+          phase,
+          ply,
+          fenBefore,
+        }),
+        phase,
       })
 
       onProgress?.({

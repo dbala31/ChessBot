@@ -105,43 +105,47 @@ export default function GameReviewPage() {
   })
 
   // Build eval data from analysis
-  const evalData = gameData?.moves.map((m) => ({
-    ply: m.ply,
-    eval: Math.round(m.evalBefore),
-    classification: m.classification as MoveClassification,
-  })) ?? []
+  const evalData =
+    gameData?.moves.map((m) => ({
+      ply: m.ply,
+      eval: Math.round(m.evalBefore),
+      classification: m.classification as MoveClassification,
+    })) ?? []
 
-  const handleExplain = useCallback(async (ply: number) => {
-    const move = moveList[ply - 1]
-    const analysisMove = gameData?.moves.find((am) => am.ply === ply)
-    if (!move || !analysisMove) return
+  const handleExplain = useCallback(
+    async (ply: number) => {
+      const move = moveList[ply - 1]
+      const analysisMove = gameData?.moves.find((am) => am.ply === ply)
+      if (!move || !analysisMove) return
 
-    setIsExplaining(true)
-    setExplainPly(ply)
-    setExplanation(null)
+      setIsExplaining(true)
+      setExplainPly(ply)
+      setExplanation(null)
 
-    const req: ExplainMoveRequest = {
-      fen: analysisMove.fenBefore,
-      playedMove: move.san,
-      bestMove: analysisMove.bestMove,
-      cpLoss: analysisMove.cpLoss,
-      phase: analysisMove.phase as GamePhase,
-    }
+      const req: ExplainMoveRequest = {
+        fen: analysisMove.fenBefore,
+        playedMove: move.san,
+        bestMove: analysisMove.bestMove,
+        cpLoss: analysisMove.cpLoss,
+        phase: analysisMove.phase as GamePhase,
+      }
 
-    try {
-      const res = await fetch('/api/explain', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(req),
-      })
-      const data = await res.json()
-      setExplanation(data.explanation ?? data.error ?? 'No explanation available.')
-    } catch {
-      setExplanation('Failed to fetch explanation. Please try again.')
-    } finally {
-      setIsExplaining(false)
-    }
-  }, [moveList, gameData?.moves])
+      try {
+        const res = await fetch('/api/explain', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(req),
+        })
+        const data = await res.json()
+        setExplanation(data.explanation ?? data.error ?? 'No explanation available.')
+      } catch {
+        setExplanation('Failed to fetch explanation. Please try again.')
+      } finally {
+        setIsExplaining(false)
+      }
+    },
+    [moveList, gameData?.moves],
+  )
 
   // Compute FEN at current ply
   const replay = new Chess()
@@ -189,7 +193,9 @@ export default function GameReviewPage() {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="animate-spin" size={24} style={{ color: 'var(--accent)' }} />
-        <span className="ml-2 text-sm" style={{ color: 'var(--text-muted)' }}>Loading game...</span>
+        <span className="ml-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+          Loading game...
+        </span>
       </div>
     )
   }
@@ -198,7 +204,9 @@ export default function GameReviewPage() {
     return (
       <div className="flex h-full items-center justify-center">
         <AlertCircle size={20} style={{ color: 'var(--danger)' }} />
-        <span className="ml-2 text-sm" style={{ color: 'var(--danger)' }}>{error ?? 'Game not found'}</span>
+        <span className="ml-2 text-sm" style={{ color: 'var(--danger)' }}>
+          {error ?? 'Game not found'}
+        </span>
       </div>
     )
   }
@@ -231,17 +239,30 @@ export default function GameReviewPage() {
             <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
               You vs {gameData.opponent}
             </span>
-            <span className="font-mono font-bold" style={{
-              color: gameData.result === '1-0' ? 'var(--success)' : gameData.result === '0-1' ? 'var(--danger)' : 'var(--warning)',
-            }}>
+            <span
+              className="font-mono font-bold"
+              style={{
+                color:
+                  gameData.result === '1-0'
+                    ? 'var(--success)'
+                    : gameData.result === '0-1'
+                      ? 'var(--danger)'
+                      : 'var(--warning)',
+              }}
+            >
               {gameData.result}
             </span>
-            <span style={{ color: 'var(--text-muted)' }}>{gameData.source === 'lichess' ? 'Lichess' : 'Chess.com'}</span>
+            <span style={{ color: 'var(--text-muted)' }}>
+              {gameData.source === 'lichess' ? 'Lichess' : 'Chess.com'}
+            </span>
             <span style={{ color: 'var(--text-muted)' }}>{gameData.timeControl}</span>
           </div>
 
           {!gameData.analysisComplete && (
-            <div className="rounded-lg px-4 py-2.5 text-xs" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}>
+            <div
+              className="rounded-lg px-4 py-2.5 text-xs"
+              style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}
+            >
               Game not yet analyzed. Go to Settings to run Stockfish analysis.
             </div>
           )}
@@ -263,9 +284,13 @@ export default function GameReviewPage() {
             <MoveList moves={moveList} currentPly={currentPly} onClickPly={goTo} />
           </div>
 
-          {currentPly > 0 && currentMoveClassification &&
+          {currentPly > 0 &&
+            currentMoveClassification &&
             (currentMoveClassification === MoveClassification.Mistake ||
-              currentMoveClassification === MoveClassification.Blunder) && (
+              currentMoveClassification === MoveClassification.Blunder ||
+              currentMoveClassification === MoveClassification.Miss ||
+              currentMoveClassification === MoveClassification.Dubious ||
+              currentMoveClassification === MoveClassification.Inaccuracy) && (
               <div className="flex gap-2">
                 <button
                   onClick={() => handleExplain(currentPly)}

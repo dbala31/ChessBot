@@ -76,23 +76,18 @@ export function generateDrillsFromMoves(
     .filter(
       (m) =>
         m.classification === MoveClassification.Mistake ||
-        m.classification === MoveClassification.Blunder,
+        m.classification === MoveClassification.Blunder ||
+        m.classification === MoveClassification.Miss,
     )
-    .map((move): GeneratedDrill => ({
-      fen: move.fenBefore,
-      solutionPv: move.bestMove,
-      source: 'own_game',
-      sourceGameId: gameId,
-      difficulty: computeDifficulty(move.cpLoss),
-      lessonType: determineLessonType(
-        move.phase,
-        move.evalBefore,
-        move.classification,
-      ),
-      themeTags: determineThemeTags(
-        move.phase,
-        move.evalBefore,
-        move.classification,
-      ),
-    }))
+    .map(
+      (move): GeneratedDrill => ({
+        fen: move.fenBefore,
+        solutionPv: move.bestMove,
+        source: 'own_game',
+        sourceGameId: gameId,
+        difficulty: computeDifficulty(move.cpLoss),
+        lessonType: determineLessonType(move.phase, move.evalBefore, move.classification),
+        themeTags: determineThemeTags(move.phase, move.evalBefore, move.classification),
+      }),
+    )
 }

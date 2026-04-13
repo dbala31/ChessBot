@@ -10,10 +10,16 @@ export enum ScoreType {
 }
 
 export enum MoveClassification {
+  Brilliant = 'brilliant',
+  Great = 'great',
   Best = 'best',
+  Excellent = 'excellent',
   Good = 'good',
+  Book = 'book',
   Inaccuracy = 'inaccuracy',
+  Dubious = 'dubious',
   Mistake = 'mistake',
+  Miss = 'miss',
   Blunder = 'blunder',
 }
 

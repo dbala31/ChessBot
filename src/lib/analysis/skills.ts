@@ -15,27 +15,56 @@ interface ScoringMove {
 // Expected average cp_loss by rating bracket (based on chess research data).
 // A player scoring at their expected level gets ~50. Better = higher. Worse = lower.
 
-const RATING_BENCHMARKS: Record<number, {
-  avgCpLoss: number
-  errorRate: number    // mistake + blunder rate
-  blunderRate: number
-  openingCpLoss: number
-  endgameCpLoss: number
-}> = {
-  600:  { avgCpLoss: 200, errorRate: 0.45, blunderRate: 0.20, openingCpLoss: 150, endgameCpLoss: 250 },
-  800:  { avgCpLoss: 150, errorRate: 0.38, blunderRate: 0.16, openingCpLoss: 120, endgameCpLoss: 200 },
-  1000: { avgCpLoss: 110, errorRate: 0.32, blunderRate: 0.12, openingCpLoss: 90,  endgameCpLoss: 160 },
-  1200: { avgCpLoss: 80,  errorRate: 0.26, blunderRate: 0.09, openingCpLoss: 65,  endgameCpLoss: 120 },
-  1400: { avgCpLoss: 60,  errorRate: 0.20, blunderRate: 0.07, openingCpLoss: 45,  endgameCpLoss: 85  },
-  1600: { avgCpLoss: 45,  errorRate: 0.15, blunderRate: 0.05, openingCpLoss: 35,  endgameCpLoss: 60  },
-  1800: { avgCpLoss: 35,  errorRate: 0.11, blunderRate: 0.03, openingCpLoss: 25,  endgameCpLoss: 45  },
-  2000: { avgCpLoss: 25,  errorRate: 0.08, blunderRate: 0.02, openingCpLoss: 18,  endgameCpLoss: 32  },
-  2200: { avgCpLoss: 18,  errorRate: 0.05, blunderRate: 0.01, openingCpLoss: 12,  endgameCpLoss: 22  },
-  2400: { avgCpLoss: 12,  errorRate: 0.03, blunderRate: 0.005, openingCpLoss: 8,  endgameCpLoss: 15  },
+const RATING_BENCHMARKS: Record<
+  number,
+  {
+    avgCpLoss: number
+    errorRate: number // mistake + blunder rate
+    blunderRate: number
+    openingCpLoss: number
+    endgameCpLoss: number
+  }
+> = {
+  600: {
+    avgCpLoss: 200,
+    errorRate: 0.45,
+    blunderRate: 0.2,
+    openingCpLoss: 150,
+    endgameCpLoss: 250,
+  },
+  800: {
+    avgCpLoss: 150,
+    errorRate: 0.38,
+    blunderRate: 0.16,
+    openingCpLoss: 120,
+    endgameCpLoss: 200,
+  },
+  1000: {
+    avgCpLoss: 110,
+    errorRate: 0.32,
+    blunderRate: 0.12,
+    openingCpLoss: 90,
+    endgameCpLoss: 160,
+  },
+  1200: {
+    avgCpLoss: 80,
+    errorRate: 0.26,
+    blunderRate: 0.09,
+    openingCpLoss: 65,
+    endgameCpLoss: 120,
+  },
+  1400: { avgCpLoss: 60, errorRate: 0.2, blunderRate: 0.07, openingCpLoss: 45, endgameCpLoss: 85 },
+  1600: { avgCpLoss: 45, errorRate: 0.15, blunderRate: 0.05, openingCpLoss: 35, endgameCpLoss: 60 },
+  1800: { avgCpLoss: 35, errorRate: 0.11, blunderRate: 0.03, openingCpLoss: 25, endgameCpLoss: 45 },
+  2000: { avgCpLoss: 25, errorRate: 0.08, blunderRate: 0.02, openingCpLoss: 18, endgameCpLoss: 32 },
+  2200: { avgCpLoss: 18, errorRate: 0.05, blunderRate: 0.01, openingCpLoss: 12, endgameCpLoss: 22 },
+  2400: { avgCpLoss: 12, errorRate: 0.03, blunderRate: 0.005, openingCpLoss: 8, endgameCpLoss: 15 },
 }
 
 function getBenchmark(rating: number) {
-  const brackets = Object.keys(RATING_BENCHMARKS).map(Number).sort((a, b) => a - b)
+  const brackets = Object.keys(RATING_BENCHMARKS)
+    .map(Number)
+    .sort((a, b) => a - b)
 
   // Find surrounding brackets and interpolate
   let lower = brackets[0]
@@ -96,18 +125,29 @@ function relativeScore(actual: number, expected: number): number {
 
 const DEFAULT_RATING = 1200
 
-export function computeTactics(moves: readonly ScoringMove[], rating: number = DEFAULT_RATING): number {
+export function computeTactics(
+  moves: readonly ScoringMove[],
+  rating: number = DEFAULT_RATING,
+): number {
   if (moves.length === 0) return 50
 
   const benchmark = getBenchmark(rating)
-  const mistakes = moves.filter((m) => m.classification === MoveClassification.Mistake).length
+  const mistakes = moves.filter(
+    (m) =>
+      m.classification === MoveClassification.Mistake ||
+      m.classification === MoveClassification.Dubious ||
+      m.classification === MoveClassification.Miss,
+  ).length
   const blunders = moves.filter((m) => m.classification === MoveClassification.Blunder).length
   const errorRate = (mistakes + blunders) / moves.length
 
   return relativeScore(errorRate, benchmark.errorRate)
 }
 
-export function computeEndgame(moves: readonly ScoringMove[], rating: number = DEFAULT_RATING): number {
+export function computeEndgame(
+  moves: readonly ScoringMove[],
+  rating: number = DEFAULT_RATING,
+): number {
   const endgameMoves = moves.filter((m) => m.phase === GamePhase.Endgame)
   if (endgameMoves.length === 0) return 50
 
@@ -115,7 +155,10 @@ export function computeEndgame(moves: readonly ScoringMove[], rating: number = D
   return relativeScore(avgCpLoss(endgameMoves), benchmark.endgameCpLoss)
 }
 
-export function computeAdvantageCapitalization(moves: readonly ScoringMove[], rating: number = DEFAULT_RATING): number {
+export function computeAdvantageCapitalization(
+  moves: readonly ScoringMove[],
+  rating: number = DEFAULT_RATING,
+): number {
   const advantageMoves = moves.filter((m) => m.evalBefore >= 150)
   if (advantageMoves.length === 0) return 50
 
@@ -123,7 +166,10 @@ export function computeAdvantageCapitalization(moves: readonly ScoringMove[], ra
   return relativeScore(avgCpLoss(advantageMoves), benchmark.avgCpLoss)
 }
 
-export function computeResourcefulness(moves: readonly ScoringMove[], rating: number = DEFAULT_RATING): number {
+export function computeResourcefulness(
+  moves: readonly ScoringMove[],
+  rating: number = DEFAULT_RATING,
+): number {
   const defenseMoves = moves.filter((m) => m.evalBefore <= -150)
   if (defenseMoves.length === 0) return 50
 
@@ -156,7 +202,10 @@ export function computeTimeManagement(moves: readonly ScoringMove[]): number {
   return clamp(consistencyScore - blunderPenalty, 0, 100)
 }
 
-export function computeOpeningPerformance(moves: readonly ScoringMove[], rating: number = DEFAULT_RATING): number {
+export function computeOpeningPerformance(
+  moves: readonly ScoringMove[],
+  rating: number = DEFAULT_RATING,
+): number {
   const openingMoves = moves.filter((m) => m.phase === GamePhase.Opening)
   if (openingMoves.length === 0) return 50
 

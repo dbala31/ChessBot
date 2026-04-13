@@ -17,19 +17,45 @@ interface MoveListProps {
 }
 
 const CLASSIFICATION_COLORS: Record<MoveClassification, string> = {
+  [MoveClassification.Brilliant]: '#26c6da',
+  [MoveClassification.Great]: '#26c6da',
   [MoveClassification.Best]: 'var(--success)',
+  [MoveClassification.Excellent]: '#66bb6a',
   [MoveClassification.Good]: 'var(--text-primary)',
+  [MoveClassification.Book]: '#8d6e63',
   [MoveClassification.Inaccuracy]: 'var(--warning)',
+  [MoveClassification.Dubious]: '#ff9800',
   [MoveClassification.Mistake]: '#f97316',
+  [MoveClassification.Miss]: '#ef5350',
   [MoveClassification.Blunder]: 'var(--danger)',
 }
 
-const CLASSIFICATION_ICONS: Record<MoveClassification, string> = {
+const CLASSIFICATION_SYMBOLS: Record<MoveClassification, string> = {
+  [MoveClassification.Brilliant]: '!!',
+  [MoveClassification.Great]: '!',
   [MoveClassification.Best]: '',
+  [MoveClassification.Excellent]: '',
   [MoveClassification.Good]: '',
+  [MoveClassification.Book]: '',
   [MoveClassification.Inaccuracy]: '?!',
+  [MoveClassification.Dubious]: '?!',
   [MoveClassification.Mistake]: '?',
+  [MoveClassification.Miss]: '',
   [MoveClassification.Blunder]: '??',
+}
+
+const CLASSIFICATION_DOTS: Record<MoveClassification, string> = {
+  [MoveClassification.Brilliant]: '#26c6da',
+  [MoveClassification.Great]: '#26c6da',
+  [MoveClassification.Best]: 'var(--success)',
+  [MoveClassification.Excellent]: '#66bb6a',
+  [MoveClassification.Good]: '',
+  [MoveClassification.Book]: '#8d6e63',
+  [MoveClassification.Inaccuracy]: 'var(--warning)',
+  [MoveClassification.Dubious]: '#ff9800',
+  [MoveClassification.Mistake]: '#f97316',
+  [MoveClassification.Miss]: '#ef5350',
+  [MoveClassification.Blunder]: 'var(--danger)',
 }
 
 export function MoveList({ moves, currentPly, onClickPly }: MoveListProps) {
@@ -59,8 +85,11 @@ export function MoveList({ moves, currentPly, onClickPly }: MoveListProps) {
     const color = move.classification
       ? CLASSIFICATION_COLORS[move.classification]
       : 'var(--text-primary)'
-    const icon = move.classification
-      ? CLASSIFICATION_ICONS[move.classification]
+    const symbol = move.classification
+      ? CLASSIFICATION_SYMBOLS[move.classification]
+      : ''
+    const dotColor = move.classification
+      ? CLASSIFICATION_DOTS[move.classification]
       : ''
     const isActive = move.ply === currentPly
 
@@ -68,23 +97,25 @@ export function MoveList({ moves, currentPly, onClickPly }: MoveListProps) {
       <button
         ref={isActive ? activeRef : undefined}
         onClick={() => onClickPly(move.ply)}
-        className="inline-flex w-20 cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-left font-mono text-xs transition-colors duration-100"
+        className="inline-flex w-24 cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-left font-mono text-xs transition-colors duration-100"
         style={{
           color,
           background: isActive ? 'var(--accent-light)' : 'transparent',
           fontWeight: isActive ? 600 : 400,
         }}
+        title={move.classification ? `${move.classification}${move.cpLoss ? ` (${move.cpLoss}cp)` : ''}` : undefined}
       >
+        {dotColor && (
+          <span className="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ background: dotColor }} />
+        )}
         <span>{move.san}</span>
-        {icon && <span className="text-[9px] opacity-60">{icon}</span>}
+        {symbol && <span className="text-[9px] font-bold">{symbol}</span>}
       </button>
     )
   }
 
   return (
-    <div
-      className="card max-h-96 overflow-y-auto"
-    >
+    <div className="card max-h-96 overflow-y-auto">
       {pairs.map((pair) => (
         <div
           key={pair.moveNumber}
