@@ -84,6 +84,9 @@ export function useAnalysis() {
       return true
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Analysis failed'
+      // Destroy the dead worker so next game gets a fresh one
+      managerRef.current?.destroy()
+      managerRef.current = null
       setState((prev) => ({
         ...prev,
         error: message,

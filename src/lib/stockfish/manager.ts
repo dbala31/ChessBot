@@ -132,6 +132,7 @@ export class StockfishManager {
   analyzePosition(
     fen: string,
     depth: number = DEFAULT_DEPTH,
+    timeoutMs: number = 15000,
   ): Promise<StockfishResult> {
     return new Promise((resolve, reject) => {
       if (this.destroyed) {
@@ -139,7 +140,30 @@ export class StockfishManager {
         return
       }
 
-      this.queue = [...this.queue, { fen, depth, resolve, reject }]
+      // Timeout to prevent hanging on a single position
+      const timer = setTimeout(() => {
+        // Return a fallback result instead of crashing
+        resolve({
+          fen,
+          bestMove: '0000',
+          eval: 0,
+          isMate: false,
+          mateIn: null,
+          pv: [],
+        })
+      }, timeoutMs)
+
+      const wrappedResolve = (result: StockfishResult) => {
+        clearTimeout(timer)
+        resolve(result)
+      }
+
+      const wrappedReject = (error: Error) => {
+        clearTimeout(timer)
+        reject(error)
+      }
+
+      this.queue = [...this.queue, { fen, depth, resolve: wrappedResolve, reject: wrappedReject }]
 
       if (!this.processing) {
         this.processNext()
